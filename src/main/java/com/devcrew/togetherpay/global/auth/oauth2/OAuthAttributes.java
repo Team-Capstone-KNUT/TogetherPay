@@ -1,5 +1,6 @@
 package com.devcrew.togetherpay.global.auth.oauth2;
 
+import com.devcrew.togetherpay.domain.user.Provider;
 import com.devcrew.togetherpay.domain.user.User;
 import com.devcrew.togetherpay.domain.user.UserRole;
 import lombok.Builder;
@@ -63,7 +64,7 @@ public class OAuthAttributes {
                 .nickname(nickname)
                 .email(email)
                 .role(UserRole.USER) // 가입 기본 권한을 USER로 설정.
-                .provider(provider)
+                .provider(Provider.valueOf(provider.toUpperCase()))
                 .providerId(providerId)
                 .build();
     }

@@ -7,8 +7,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -27,8 +27,8 @@ public class TokenProvider {
     private SecretKey key;
 
     public TokenProvider(
-            @Value("${jwt-client-secret}") String secret,
-            @Value("${jwt-expiry-seconds}") long tokenValidityInSeconds) {
+            @Value("${jwt.client-secret}") String secret, //
+            @Value("${jwt.expiry-seconds}") long tokenValidityInSeconds) { //
             this.secret = secret;
             this.tokenValidityInMilliseconds = tokenValidityInSeconds * 1000;
     }

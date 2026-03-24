@@ -1,7 +1,7 @@
 package com.devcrew.togetherpay.global.auth.oauth2;
 
 import com.devcrew.togetherpay.domain.user.User;
-import com.devcrew.togetherpay.domain.user.repository.UserRespository;
+import com.devcrew.togetherpay.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-    private final UserRespository userRespository;
+    private final UserRepository userRespository;
 
     @Override
     @Transactional
