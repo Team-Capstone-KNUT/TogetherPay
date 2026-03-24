@@ -26,6 +26,7 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 폼 로그인 비활성화
@@ -41,7 +42,8 @@ public class SecurityConfig {
                 // [권한 룰 설정] 접근 경로 주소 지정
                 .authorizeHttpRequests(auth -> auth
                         // 💡 주의: /api/v1/user/me 같은 내 정보 조회는 여기에 넣으면 안 됩니다! (인증 필수)
-                        .requestMatchers("/", "/login/**", "/oauth2/**", "/api/v1/auth/**").permitAll() // 여기는 프리패스
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated() // 위 외에 접근 시 무조건 인증(토큰) 필요함.
                 )
 
