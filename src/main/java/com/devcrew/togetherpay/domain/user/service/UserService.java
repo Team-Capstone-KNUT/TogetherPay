@@ -54,10 +54,17 @@ public class UserService {
 
     /**
      * 공통 유저 조회 및 예외 처리 로직 분리
+     * 탈퇴된 유저에 대하여 접근 차단 방어 로직 추가
      */
     private User findUserOrThrow(Long userId) {
-        return userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getStatus() == UserStatus.WITHDRAWN) {
+            log.warn("탈퇴된 회원이 접근을 시도했습니다. userId: {}", userId);
+            throw new BusinessException(ErrorCode.USER_ALREADY_WITHDRAWN);
+        }
+        return user;
     }
 
 }
