@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class ErrorResponse {
+    @Builder.Default // timestamp null 이슈 방어
     private final LocalDateTime timestamp = LocalDateTime.now();
     private final int status;
     private final String error;
