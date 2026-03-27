@@ -9,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -21,19 +23,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        BindingResult bindingResult = e.getBindingResult();
-        StringBuilder builder = new StringBuilder();
+        // stream을 사용하니까 코드가 완전 깔끔해짐.
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> String.format("[%s]은(는) %s.", error.getField(), error.getDefaultMessage()))
+                .collect(Collectors.joining(" "));
 
-        // 에러 메시지를 "[필드명](은)는 메시지." 형태로 조합한다.
-        for (FieldError fieldError : bindingResult.getFieldErrors()) {
-            builder.append("[");
-            builder.append(fieldError.getField());
-            builder.append("](은)는 ");
-            builder.append(fieldError.getDefaultMessage());
-            builder.append(". "); // 여러 개인 경우 구분한다.
-        }
-
-        String message = builder.toString();
         log.error("Validation Fail: {}", message);
 
         return ErrorResponse.toResponseEntity(ErrorCode.INVALID_INPUT_VALUE, message);
