@@ -27,7 +27,7 @@ public class ErrorResponse {
                         .message(errorCode.getMessage())
                         .build()
                 );
-    };
+    }
 
     // 위와는 다르게 구체적인 메시지가 필요한 상황(예: 검증 에러(BindingError)에 사용할 메서드
     public static ResponseEntity<ErrorResponse> toResponseEntity(ErrorCode errorCode, String customMessage) {
