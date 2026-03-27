@@ -25,8 +25,6 @@ import java.io.IOException;
     OncePerRequestFilter는 요청에 대해서 단 한번만 실행되는 것을 보장하는 필터라서 이걸 사용했다.
 */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
 
     private final TokenProvider tokenProvider;
     private final RedisService redisService;
@@ -36,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         // 프론트에서 보낸 요청 헤더에서 jwt 토큰을 추출한다.
-        String token = resolveToken(request);
+        String token = JwtHeaderUtil.resolveToken(request);
         // 토큰이 존재하고, tokenProvider에서 토큰 검증을 통과하면?
         if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
             if (!redisService.hasKey(token)) {
@@ -52,19 +50,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         // 로직 종료 후, 다음 필터 아니면 컨트롤러로 요청을 넘긴다.
         filterChain.doFilter(request, response);
-    }
-
-    // Bearer 파싱 로직
-    private String resolveToken(HttpServletRequest request) {
-        // 프론트 요청으로부터 헤더를 가져온다.
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-
-        // 헤더에 값이 있는지와 문자열이 "Bearer "로 시작하는지 검사한다.
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            // 조건 통과 시 "Bearer "(7글자)를 잘라서 토큰만 반환한다.
-            return bearerToken.substring(7);
-        }
-        // 조건 미 통과시 null 반환됨. 오류 발생함.
-        return null;
     }
 }
