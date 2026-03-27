@@ -29,6 +29,9 @@ public class User {
 
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    private UserStatus status = UserStatus.ACTIVE;
+
     @Builder
     public User(String email, String nickname, UserRole role, Provider provider, String providerId) {
         this.email = email;
@@ -42,6 +45,10 @@ public class User {
         if (newNickname != null && !newNickname.isBlank()) {
             this.nickname = newNickname;
         }
+    }
+
+    public void withdraw() {
+        this.status = UserStatus.WITHDRAWN;
     }
 
 
