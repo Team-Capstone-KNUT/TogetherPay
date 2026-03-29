@@ -1,6 +1,7 @@
 package com.devcrew.togetherpay.domain.expense.controller;
 
 import com.devcrew.togetherpay.domain.expense.dto.FindDetailExpenseResponse;
+import com.devcrew.togetherpay.domain.expense.dto.FindExpensesResponse;
 import com.devcrew.togetherpay.domain.expense.dto.RegisterDutchExpenseRequest;
 import com.devcrew.togetherpay.domain.expense.dto.RegisterIndividualExpenseRequest;
 import com.devcrew.togetherpay.domain.expense.dto.UpdateExpenseRequest;
