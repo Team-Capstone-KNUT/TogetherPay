@@ -16,7 +16,12 @@ public enum ErrorCode {
 
     // 유저(User)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 회원입니다."),
-    USER_ALREADY_WITHDRAWN(HttpStatus.BAD_REQUEST, "U002", "이미 탈퇴 처리 된 회원입니다.");
+    USER_ALREADY_WITHDRAWN(HttpStatus.BAD_REQUEST, "U002", "이미 탈퇴 처리 된 회원입니다."),
+
+    // 팀(Team)
+    TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "존재하지 않는 팀입니다."),
+    INVALID_TEAM_PASSWORD(HttpStatus.BAD_REQUEST, "T002", "잘못된 팀 비밀번호입니다."),
+    ALREADY_TEAM_MEMBER(HttpStatus.ALREADY_REPORTED, "T003", "이미 팀에 소속된 멤버입니다.");
 
     private final HttpStatus status;
     private final String code;
