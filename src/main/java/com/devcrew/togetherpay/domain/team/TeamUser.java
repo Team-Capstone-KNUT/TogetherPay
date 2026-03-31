@@ -30,12 +30,28 @@ public class TeamUser extends BaseTimeEntity {
     @Column(nullable = false)
     private TeamRole role;
 
-    @Builder
-    public TeamUser(Team team, User user, TeamRole role) {
+    @Builder(access = AccessLevel.PRIVATE)
+    private TeamUser(Team team, User user, TeamRole role) {
         this.team = team;
         this.user = user;
         this.role = role;
         team.addTeamUser(this);
+    }
+
+    public static TeamUser createLeader(Team team, User user) {
+        return TeamUser.builder()
+                .team(team)
+                .user(user)
+                .role(TeamRole.LEADER)
+                .build();
+    }
+
+    public static TeamUser createMember(Team team, User user) {
+        return TeamUser.builder()
+                .team(team)
+                .user(user)
+                .role(TeamRole.MEMBER)
+                .build();
     }
 
 }

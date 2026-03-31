@@ -1,6 +1,8 @@
 package com.devcrew.togetherpay.domain.team;
 
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
+import com.devcrew.togetherpay.global.error.ErrorCode;
+import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -34,11 +36,27 @@ public class Team extends BaseTimeEntity {
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamUser> teamUsers = new ArrayList<>();
 
-    @Builder
-    public Team(String name, String password) {
+    // 팩토리 메서드로만 생성하도록 제한(빌더에 액세스 레벨 PRIVATE로)
+    @Builder(access = AccessLevel.PRIVATE)
+    private Team(String name, String password) {
         this.name = name;
         this.password = password;
         this.inviteCode = generateInviteCode();
+    }
+
+    // 팀 생성 팩토리 메서드
+    public static Team createTeam(String name, String password) {
+        return Team.builder()
+                .name(name)
+                .password(password)
+                .build();
+    }
+
+    // 팀 비밀번호 검증 메서드
+    public void validatePassword(String rawPassword) {
+        if (!this.password.equals(rawPassword)) {
+            throw new BusinessException(ErrorCode.INVALID_TEAM_PASSWORD);
+        }
     }
 
     private String generateInviteCode() {
