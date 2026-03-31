@@ -21,7 +21,14 @@ public enum ErrorCode {
     // 팀(Team)
     TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "존재하지 않는 팀입니다."),
     INVALID_TEAM_PASSWORD(HttpStatus.BAD_REQUEST, "T002", "잘못된 팀 비밀번호입니다."),
-    ALREADY_TEAM_MEMBER(HttpStatus.ALREADY_REPORTED, "T003", "이미 팀에 소속된 멤버입니다.");
+    ALREADY_TEAM_MEMBER(HttpStatus.CONFLICT, "T003", "이미 팀에 가입된 멤버입니다."),
+
+    // 권한(Role)
+    NOT_TEAM_LEADER(HttpStatus.FORBIDDEN, "R001", "방장만 접근 가능한 기능입니다."),
+    TEAM_MEMBER_NOT_FOUND(HttpStatus.FORBIDDEN, "R002", "해당 팀에 소속된 멤버가 아닙니다."),
+
+    // 예산(Budget)
+    BUDGET_ALREADY_EXISTS(HttpStatus.CONFLICT, "B001", "해당 날짜에는 이미 예산이 설정되어 있습니다,");
 
     private final HttpStatus status;
     private final String code;
