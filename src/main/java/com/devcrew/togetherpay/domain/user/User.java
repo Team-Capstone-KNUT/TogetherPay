@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+
 @Entity
 @Getter
 @Table(name = "users")
@@ -32,6 +34,9 @@ public class User extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "user")
+    private List<Participant> participants = new ArrayList<>();
 
     @Builder
     public User(String email, String nickname, UserRole role, Provider provider, String providerId) {
