@@ -60,7 +60,7 @@ public class BudgetService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
     }
 
-    private TeamUser getTeamUserOrThrow(Long userId) {
+    private TeamUser getTeamUserOrThrow(Team team, User user) {
         return teamUserRepository.findByTeamAndUser(team, user)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_MEMBER_NOT_FOUND));
     }
