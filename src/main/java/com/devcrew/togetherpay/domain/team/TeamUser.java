@@ -2,6 +2,8 @@ package com.devcrew.togetherpay.domain.team;
 
 import com.devcrew.togetherpay.domain.user.User;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
+import com.devcrew.togetherpay.global.error.ErrorCode;
+import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -52,6 +54,12 @@ public class TeamUser extends BaseTimeEntity {
                 .user(user)
                 .role(TeamRole.MEMBER)
                 .build();
+    }
+
+    public void validateLeader() {
+        if (this.role != TeamRole.LEADER) {
+            throw new BusinessException(ErrorCode.NOT_TEAM_LEADER);
+        }
     }
 
 }
