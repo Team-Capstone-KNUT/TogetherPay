@@ -71,4 +71,9 @@ public class Team extends BaseTimeEntity {
     public void addTeamUser(TeamUser teamUser) {
         this.teamUsers.add(teamUser);
     }
+
+    // 팀 이름 수정 메서드
+    public void updateName(String newName) {
+        this.name = newName;
+    }
 }
