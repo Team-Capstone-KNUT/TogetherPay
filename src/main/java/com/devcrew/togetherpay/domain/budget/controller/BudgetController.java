@@ -16,16 +16,23 @@ import org.springframework.web.bind.annotation.*;
 public class BudgetController {
     private final BudgetService budgetService;
 
+    /**
+     * 특정 날짜 예산 등록 API
+     * @param userId
+     * @param teamId
+     * @param request
+     * @return
+     */
     @PostMapping
     public ResponseEntity<BudgetResponse> createDailyBudget(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long teamId,
             @Valid@RequestBody CreateBudgetRequest request) {
 
+        // 비즈니스 로직 호출, 파라미터로 userId, teamId, request(bugetDate, amount) 넘겨준다.
         BudgetResponse response = budgetService.createDailyBudget(
                 userId, teamId, request.budgetDate(), request.amount()
         );
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

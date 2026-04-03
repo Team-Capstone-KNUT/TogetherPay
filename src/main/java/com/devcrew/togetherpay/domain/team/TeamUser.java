@@ -40,6 +40,7 @@ public class TeamUser extends BaseTimeEntity {
         team.addTeamUser(this);
     }
 
+    // 팀 생성 팩토리 메서드
     public static TeamUser createLeader(Team team, User user) {
         return TeamUser.builder()
                 .team(team)
@@ -48,6 +49,7 @@ public class TeamUser extends BaseTimeEntity {
                 .build();
     }
 
+    // 팀 가입 팩토리 메서드
     public static TeamUser createMember(Team team, User user) {
         return TeamUser.builder()
                 .team(team)
@@ -56,10 +58,10 @@ public class TeamUser extends BaseTimeEntity {
                 .build();
     }
 
+    // 권한 검증 메서드
     public void validateLeader() {
         if (this.role != TeamRole.LEADER) {
             throw new BusinessException(ErrorCode.NOT_TEAM_LEADER);
         }
     }
-
 }
