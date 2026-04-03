@@ -2,6 +2,7 @@ package com.devcrew.togetherpay.global.common.ExchangeRate.service;
 
 import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.global.common.ExchangeRate.dto.FindExchangeRateResponse;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -17,18 +18,19 @@ public class ExchangeRateService {
 
   @Value("${openApi.auth-key}")
   private String authkey;
-
   private final WebClient webClient;
 
   /**
    *
    * @param currency
+   * @Param expenseDate
    * @return FindExchangeRateResponse
    * 환율 정보 조회
    */
-  public FindExchangeRateResponse getExchangeRate(Currency currency) {
+  private FindExchangeRateResponse searchExchange(Currency currency, LocalDate expenseDate) {
 
-    String searchDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    // 패턴 설정
+    String searchDate = expenseDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
     return webClient.get()
         .uri(uriBuilder -> uriBuilder
@@ -37,10 +39,32 @@ public class ExchangeRateService {
             .queryParam("data", "AP01")
             .build())
         .retrieve()
-        .bodyToFlux(FindExchangeRateResponse.class) // stream 처럼 파이프라인에 하나씩 흘려보내기. (Flux)
+        .bodyToFlux(FindExchangeRateResponse.class)
         .filter(response -> response.curUnit().contains(currency.name()))
         .blockFirst();
 
+  }
+
+  /**
+   * 선택한 날짜의 환율 조회 (1 외화 → KRW 매매기준율)
+   * KRW인 경우 null 반환
+   *
+   * 매매기준율로 반환.
+   */
+  public BigDecimal getExchangeRate(Currency currency, LocalDate expenseDate) {
+    if (currency == Currency.KRW) {
+      return null;
+    }
+
+    FindExchangeRateResponse response = searchExchange(currency, expenseDate);
+
+    if (response == null || response.dealBasR() == null) {
+      throw new IllegalStateException("환율 정보를 가져올 수 없습니다: " + currency);
+    }
+
+    // ',' 쉼표 제거
+    String rateStr = response.dealBasR().replace(",", "");
+    return new BigDecimal(rateStr);
   }
 
 }
