@@ -4,6 +4,7 @@ import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.team.dto.CreateTeamRequest;
 import com.devcrew.togetherpay.domain.team.dto.JoinTeamRequest;
 import com.devcrew.togetherpay.domain.team.dto.TeamResponse;
+import com.devcrew.togetherpay.domain.team.dto.UpdateTeamRequest;
 import com.devcrew.togetherpay.domain.team.service.TeamService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -66,5 +67,23 @@ public class TeamController {
         teamService.deleteTeam(userId, teamId);
         // 응답 성공 시 204 no content 반환(반환값 없음)
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 팀 이름 수정 API
+     * @param userId
+     * @param teamId
+     * @param request
+     * @return
+     */
+    @PatchMapping("/{teamId}")
+    public ResponseEntity<Void> updateTeamName(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long teamId,
+            @Valid @RequestBody UpdateTeamRequest request) {
+        // 팀 이름 변경 비즈니스 로직 호출, 파라미터로 userId, teamId, name 넘겨준다.
+        teamService.updateTeamName(userId, teamId, request.name());
+        // 200 Ok 응답 반환
+        return ResponseEntity.ok().build();
     }
 }

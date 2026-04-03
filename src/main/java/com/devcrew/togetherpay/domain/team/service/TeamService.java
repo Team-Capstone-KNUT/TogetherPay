@@ -84,6 +84,27 @@ public class TeamService {
         log.info("팀 삭제 완료. teamId: {}, deleteBy(userId): {}", teamId, userId);
     }
 
+    /**
+     * 팀 이름 수정 비즈니스 로직
+     * @param userId
+     * @param teamId
+     * @param newName
+     */
+    @Transactional
+    public void updateTeamName(Long userId, Long teamId, String newName) {
+        // 유저 검증 메서드 호출
+        User user = getUserOrThrow(userId);
+        // 팀 검증 메서드 호출
+        Team team = getTeamOrThrow(teamId);
+        // 팀 유저 검증 메서드 호출
+        TeamUser teamUser = getTeamUserOrThrow(team, user);
+        // 유저 권한이 리더인지 확인
+        teamUser.validateLeader();
+        // 엔티티에 생성해둔 팀 이름 변경 편의 메서드 호출
+        team.updateName(newName);
+        log.info("팀 이름 수정 완료. teamId: {}, newName: {}", teamId, newName);
+    }
+
     // 유저 검증 메서드(유저 존재여부)
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)
