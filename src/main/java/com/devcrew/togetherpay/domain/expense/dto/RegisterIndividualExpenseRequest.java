@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Builder;
 
@@ -30,6 +31,9 @@ public record RegisterIndividualExpenseRequest(
 
     @NotNull(message = "카테고리를 선택해주세요.")
     Category category,
+
+    @NotNull(message = "결제한 날짜를 입력해주세요.")
+    LocalDate expenseDate,
 
     @NotNull(message = "결제 수단을 선택해주세요.")
     PaymentMethod method,
