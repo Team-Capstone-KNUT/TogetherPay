@@ -5,6 +5,7 @@ import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.domain.expense.PaymentMethod;
 import com.devcrew.togetherpay.domain.expense.dto.ParticipantInfo;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Builder;
 
@@ -16,6 +17,7 @@ public record UpdateExpenseCommand(
     String description,
     Currency currency,
     Category category,
+    LocalDate expenseDate,
     PaymentMethod method,
     BigDecimal totalAmount,
     List<ParticipantInfo> participantInfos
