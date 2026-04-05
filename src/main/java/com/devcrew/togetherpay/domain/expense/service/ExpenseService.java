@@ -9,6 +9,12 @@ import com.devcrew.togetherpay.domain.expense.dto.FindDetailExpenseResponse;
 import com.devcrew.togetherpay.domain.expense.dto.FindExpensesResponse;
 import com.devcrew.togetherpay.domain.expense.dto.ParticipantInfo;
 import com.devcrew.togetherpay.domain.expense.repository.ExpenseRepository;
+import com.devcrew.togetherpay.domain.team.Team;
+import com.devcrew.togetherpay.domain.team.TeamUser;
+import com.devcrew.togetherpay.domain.team.repository.TeamRepository;
+import com.devcrew.togetherpay.domain.user.User;
+import com.devcrew.togetherpay.domain.user.repository.UserRepository;
+import com.devcrew.togetherpay.global.common.ExchangeRate.service.ExchangeRateService;
 import com.devcrew.togetherpay.global.error.ErrorCode;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import java.math.BigDecimal;
@@ -27,9 +33,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = false)
 public class ExpenseService {
 
-  private final ExpenseRepository expenseRepository;
   private final TeamRepository teamRepository;
   private final UserRepository userRepository;
+  private final ExpenseRepository expenseRepository;
+  private final ExchangeRateService exchangeRateService;
 
   /**
    *
@@ -40,8 +47,7 @@ public class ExpenseService {
   public void registerWithDutchPay(Long userId, RegisterDutchExpenseCommand command) {
 
     // 선택한 팀 조회
-    Team selectedTeam = teamRepository.findById(command.teamId())
-        .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
+    Team selectedTeam = findByTeamId(command.teamId());
 
     List<ParticipantInfo> participantInfos = command.participantInfos();
 
@@ -53,13 +59,17 @@ public class ExpenseService {
 
     BigDecimal divideAmount = calculateDutchAmount(participantInfos, command.totalAmount());
 
-    Expense expense = command.toEntity(selectedTeam, command.totalAmount());
+    // 결제한 날짜 환율 조회
+    BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
+
+    Expense expense = command.toEntity(selectedTeam, command.totalAmount(), exchangeRate);
+
+    expense.calculateKRW();
 
     // 참여자 할당
     assignParticipants(expense, participantInfos, p -> divideAmount);
 
     expenseRepository.save(expense);
-
   }
 
   /**
@@ -71,8 +81,7 @@ public class ExpenseService {
   public void registerWithIndividualAmount(Long userId, RegisterIndividualExpenseCommand command) {
 
     // 선택한 팀 조회
-    Team selectedTeam = teamRepository.findById(command.teamId())
-        .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
+    Team selectedTeam = findByTeamId(command.teamId());
 
     List<ParticipantInfo> participantInfos = command.participantInfos();
 
@@ -84,7 +93,12 @@ public class ExpenseService {
 
     BigDecimal totalAmount = calculateIndividualAmount(participantInfos);
 
-    Expense expense = command.toEntity(selectedTeam, totalAmount);
+    // 지출 등록 시점 환율 조회
+    BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
+
+    Expense expense = command.toEntity(selectedTeam, totalAmount, exchangeRate);
+
+    expense.calculateKRW();
 
     // 참여자 할당
     assignParticipants(expense, participantInfos, ParticipantInfo::amount);
@@ -110,9 +124,9 @@ public class ExpenseService {
     Team team = expense.getTeam();
 
     // 팀에 속한 멤버들 조회
-    List<TeamMember> teamMembers = team.getTeamMembers();
+    List<TeamUser> teamUsers = team.getTeamUsers();
 
-    invalidateTeamMember(userId, teamMembers);
+    invalidateTeamUser(userId, teamUsers);
 
     return FindDetailExpenseResponse.from(expense);
   }
@@ -127,12 +141,11 @@ public class ExpenseService {
    */
   @Transactional(readOnly = true)
   public FindExpensesResponse getExpenses(Long userId, Long teamId) {
-    Team team = teamRepository.findById(teamId)
-        .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
+    Team team = findByTeamId(teamId);
 
-    List<TeamMember> teamMembers = team.getMembers();
+    List<TeamUser> teamUsers = team.getTeamUsers();
 
-    invalidateTeamMember(userId, teamMembers);
+    invalidateTeamUser(userId, teamUsers);
 
     List<Expense> expenses = team.getExpenses();
 
@@ -154,8 +167,8 @@ public class ExpenseService {
     // 속한 팀 조회
     Team team = expense.getTeam();
     // 팀에 속한 멤버들 조회
-    List<TeamMember> teamMembers = team.getTeamMembers();
-    invalidateTeamMember(userId, teamMembers);
+    List<TeamUser> teamUsers = team.getTeamUsers();
+    invalidateTeamUser(userId, teamUsers);
 
     expense.clearParticipants();
 
@@ -181,34 +194,34 @@ public class ExpenseService {
     Team team = expense.getTeam();
 
     // 팀에 속한 멤버들 조회
-    List<TeamMember> teamMembers = team.getTeamMembers();
+    List<TeamUser> teamUsers = team.getTeamUsers();
 
-    invalidateTeamMember(userId, teamMembers);
+    invalidateTeamUser(userId, teamUsers);
 
     expenseRepository.delete(expense);
   }
 
-  private void validateAllAreMember(Team team, List<ParticipantInfo> participantInfos) {
-    // 팀에 속한 멤버 조회
-    List<TeamMember> teamMembers = team.getTeamMembers();
+  private Team findByTeamId(Long teamId) {
+    return teamRepository.findById(teamId)
+        .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
+  }
 
-    // List 보다 set이 성능이 더 좋다!
-    // List는 앞에서부터 하나씩 순차 탐색 [1, 2, 3, 4, 5, 6..] 찾을 떄까지 쭉 순회한다.
-    // HashSet은 contains() 호출 시 hash 함수로 바로 위치 계산.
-    Set<Long> teamMemberIds = teamMembers.stream()
-        .map(TeamMember::getUserId)
+  private void validateAllAreMember(Team team, List<ParticipantInfo> participantInfos) {
+    List<TeamUser> teamUsers = team.getTeamUsers();
+
+    Set<Long> teamUserIds = teamUsers.stream()
+        .map(teamUser -> teamUser.getUser().getId())
         .collect(Collectors.toSet());
 
     List<Long> participantUserIds = participantInfos.stream()
         .map(ParticipantInfo::userId)
         .toList();
 
-    // 팀 멤버에 참여자 모두가 속하는지.
-    boolean allAreMember =
-        teamMemberIds.containsAll(participantUserIds);
+    boolean allAreTeamUser =
+        teamUserIds.containsAll(participantUserIds);
 
-    if (!allAreMember) {
-      throw new BusinessException(ErrorCode.NOT_A_TEAM_MEMBER);
+    if (!allAreTeamUser) {
+      throw new BusinessException(ErrorCode.NOT_A_TEAM_USER);
     }
   }
 
@@ -217,28 +230,25 @@ public class ExpenseService {
         .filter(ParticipantInfo::isPayer)
         .toList();
 
-    // 결제자가 2명 이상이면 예외 처리
     if (payers.size() != 1) {
       throw new BusinessException(ErrorCode.INVALID_PAYER_COUNT);
     }
 
   }
 
-  private void invalidateTeamMember(Long userId, List<TeamMember> teamMembers) {
-    boolean isUserTeam = teamMembers.stream()
-        .anyMatch(member -> member.getUser().getId() == userId);
+  private void invalidateTeamUser(Long userId, List<TeamUser> teamUsers) {
+    boolean isUserTeam = teamUsers.stream()
+        .anyMatch(teamUser -> teamUser.getUser().getId().equals(userId));
 
     if (!isUserTeam) {
-      throw new BusinessException(ErrorCode.NOT_A_TEAM_MEMBER);
+      throw new BusinessException(ErrorCode.NOT_A_TEAM_USER);
     }
   }
 
   private BigDecimal calculateIndividualAmount(List<ParticipantInfo> participantInfos) {
-    BigDecimal totalAmount = participantInfos.stream()
+    return participantInfos.stream()
         .map(ParticipantInfo::amount)
-        .reduce(BigDecimal.ZERO, BigDecimal::add); // 초기값 0 부터 모두 더하기.
-
-    return totalAmount;
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
   private BigDecimal calculateDutchAmount(List<ParticipantInfo> participantInfos, BigDecimal totalAmount) {
@@ -246,8 +256,8 @@ public class ExpenseService {
 
     return totalAmount.divide(
         BigDecimal.valueOf(count),
-        2, // 소수점 2자리.
-        RoundingMode.HALF_UP // 반올림
+        2,
+        RoundingMode.HALF_UP
     );
   }
 
@@ -261,6 +271,7 @@ public class ExpenseService {
 
     participantInfos.forEach(p -> {
       Participant participant = Participant.of(expense, userMap.get(p.userId()), p.isPayer(), amountProvider.apply(p));
+      participant.calculateKRW(expense.getExchangeRate());
       expense.addParticipant(participant);
     });
   }
@@ -269,9 +280,10 @@ public class ExpenseService {
     BigDecimal divideAmount =
         calculateDutchAmount(command.participantInfos(), command.totalAmount());
 
-    expense.updateInfo(command.title(), command.description(),
-        command.currency(), command.category(), command.method(), command.totalAmount());
+    BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
 
+    expense.updateInfo(command.title(), command.description(),
+        command.currency(), command.category(), command.expenseDate(), command.method(), command.totalAmount(), exchangeRate);
     assignParticipants(expense, command.participantInfos(), p -> divideAmount);
   }
 
@@ -279,11 +291,11 @@ public class ExpenseService {
     BigDecimal totalAmount =
         calculateIndividualAmount(command.participantInfos());
 
-    expense.updateInfo(command.title(), command.description(),
-        command.currency(), command.category(), command.method(), totalAmount);
+    BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
 
+    expense.updateInfo(command.title(), command.description(),
+        command.currency(), command.category(), command.expenseDate(), command.method(), totalAmount, exchangeRate);
     assignParticipants(expense, command.participantInfos(), ParticipantInfo::amount);
   }
-
 
 }
