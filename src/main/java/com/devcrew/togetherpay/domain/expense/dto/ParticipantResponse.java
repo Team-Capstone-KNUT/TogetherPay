@@ -6,7 +6,7 @@ import lombok.Builder;
 @Builder
 public record ParticipantResponse(
     Long participantId,
-    String userId,
+    Long userId,
     String nickname,
     BigDecimal amount,
     boolean isPayer
