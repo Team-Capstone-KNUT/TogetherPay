@@ -4,7 +4,7 @@ import com.devcrew.togetherpay.domain.expense.Category;
 import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.domain.expense.Expense;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Builder;
 
@@ -21,8 +21,9 @@ public record FindExpensesResponse(
               .title(expense.getTitle())
               .currency(expense.getCurrency())
               .totalAmount(expense.getTotalAmount())
+              .krwTotalAmount(expense.getKrwTotalAmount())
               .category(expense.getCategory())
-              .createdAt(expense.getCreatedAt())
+              .expenseDate(expense.getExpenseDate())
               .build();
         }).toList();
 
@@ -37,8 +38,9 @@ public record FindExpensesResponse(
       String title,
       Currency currency,
       BigDecimal totalAmount,
+      Integer krwTotalAmount,
       Category category,
-      LocalDateTime createdAt
+      LocalDate expenseDate
   ) {}
 
 }
