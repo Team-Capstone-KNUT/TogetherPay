@@ -1,7 +1,11 @@
 package com.devcrew.togetherpay.domain.expense;
 
-import com.devcrew.togetherpay.domain.expense.dto.ParticipantResponse;
+import com.devcrew.togetherpay.domain.user.User;
+import com.devcrew.togetherpay.global.common.vo.Money;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -30,8 +34,17 @@ public class Participant {
   @JoinColumn(name = "expense_id")
   private Expense expense;
 
-  @Column(nullable = false, precision = 15, scale = 2)
-  private BigDecimal amount;
+  @Embedded
+  @AttributeOverrides({
+      @AttributeOverride(name = "amount",
+          column = @Column(name = "amount",
+              precision = 15, scale = 2,
+              nullable = false))
+  })
+  private Money amount;
+
+  @Column(name = "krw_amount", nullable = true)
+  private Integer krwAmount;
 
   @Column(nullable = false)
   private boolean isPayer;
@@ -45,8 +58,22 @@ public class Participant {
         .expense(expense)
         .user(user)
         .isPayer(isPayer)
-        .amount(amount)
+        .amount(Money.of(amount))
         .build();
+  }
+
+  public BigDecimal getAmount() {
+    return this.amount.getAmount();
+  }
+
+  public void calculateKRW(BigDecimal exchangeRate) {
+    if (exchangeRate == null) {
+      this.krwAmount = amount.toWons();
+      return;
+    }
+
+    Money result = amount.calculateMultiply(exchangeRate);
+    this.krwAmount = result.toWons();
   }
 
 }
