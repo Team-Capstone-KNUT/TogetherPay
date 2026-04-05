@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -28,7 +29,7 @@ public class ExpenseController {
 
   @PostMapping("/dutch")
   public ResponseEntity<Void> registerWithDutch(
-      @LoginUser Long userId,
+      @AuthenticationPrincipal Long userId,
       @RequestBody @Valid RegisterDutchExpenseRequest request
   ) {
 
@@ -38,7 +39,7 @@ public class ExpenseController {
 
   @PostMapping("/individual")
   public ResponseEntity<Void> registerWithIndividual(
-      @LoginUser Long userId,
+      @AuthenticationPrincipal Long userId,
       @RequestBody @Valid RegisterIndividualExpenseRequest request
   ) {
     expenseService.registerWithIndividualAmount(userId, request.toCommand());
@@ -47,16 +48,16 @@ public class ExpenseController {
 
   @GetMapping("/{expenseId}")
   public ResponseEntity<FindDetailExpenseResponse> getExpense(
-      @LoginUser Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long expenseId
   ) {
     FindDetailExpenseResponse response = expenseService.getExpense(userId, expenseId);
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping("/{teamId}")
+  @GetMapping("/team/{teamId}")
   public ResponseEntity<FindExpensesResponse> getExpenses(
-      @LoginUser Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long teamId
   ) {
     FindExpensesResponse response = expenseService.getExpenses(userId, teamId);
@@ -65,7 +66,7 @@ public class ExpenseController {
 
   @PatchMapping("/{expenseId}")
   public ResponseEntity<Void> update(
-      @LoginUser Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long expenseId,
       @RequestBody @Valid UpdateExpenseRequest request
   ) {
@@ -75,11 +76,10 @@ public class ExpenseController {
 
   @DeleteMapping("/{expenseId}")
   public ResponseEntity<Void> delete(
-      @LoginUser Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long expenseId
   ) {
     expenseService.deleteExpense(userId, expenseId);
     return ResponseEntity.noContent().build();
   }
-
 }
