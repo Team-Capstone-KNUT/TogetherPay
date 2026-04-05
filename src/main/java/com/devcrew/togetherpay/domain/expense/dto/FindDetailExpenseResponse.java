@@ -5,6 +5,7 @@ import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.domain.expense.Expense;
 import com.devcrew.togetherpay.domain.expense.PaymentMethod;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Builder;
 
@@ -15,8 +16,10 @@ public record FindDetailExpenseResponse(
     String title,
     String description,
     BigDecimal totalAmount,
+    Integer krwTotalAmount,
     Currency currency,
     Category category,
+    LocalDate expenseDate,
     PaymentMethod paymentMethod,
     List<ParticipantResponse> participantResponses
 
@@ -28,8 +31,10 @@ public record FindDetailExpenseResponse(
         .title(expense.getTitle())
         .description(expense.getDescription())
         .totalAmount(expense.getTotalAmount())
+        .krwTotalAmount(expense.getKrwTotalAmount())
         .currency(expense.getCurrency())
         .category(expense.getCategory())
+        .expenseDate(expense.getExpenseDate())
         .paymentMethod(expense.getPaymentMethod())
         .participantResponses(expense.participantsToResponse())
         .build();
