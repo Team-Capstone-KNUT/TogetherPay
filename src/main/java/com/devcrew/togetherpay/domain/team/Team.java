@@ -1,5 +1,6 @@
 package com.devcrew.togetherpay.domain.team;
 
+import com.devcrew.togetherpay.domain.expense.Expense;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import com.devcrew.togetherpay.global.error.ErrorCode;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;

@@ -1,5 +1,6 @@
 package com.devcrew.togetherpay.domain.user;
 
+import com.devcrew.togetherpay.domain.expense.Participant;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -8,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
