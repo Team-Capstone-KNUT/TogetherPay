@@ -112,4 +112,15 @@ public class TokenProvider {
             return e.getClaims();
         }
     }
+
+    // 액세스 토큰 유효시간 계산 메서드
+    public Long getExpiration(String accessToken) {
+        Date expiration = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(accessToken)
+                .getPayload()
+                .getExpiration();
+        return expiration.getTime();
+    }
 }

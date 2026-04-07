@@ -2,8 +2,10 @@ package com.devcrew.togetherpay.domain.user.repository;
 
 import com.devcrew.togetherpay.domain.user.Provider;
 import com.devcrew.togetherpay.domain.user.User;
+import com.devcrew.togetherpay.domain.user.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -11,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     // 소셜 로그인의 경우 이메일이 없는 경우가 있어, 소셜 제공자 타입 AND 식별자로 조회
     Optional<User> findByProviderAndProviderId(Provider provider, String providerId);
+    // 상태값과 수정(탈퇴)시간 기준으로 삭제(탈퇴 시 개인정보 삭제)
+    void deleteByStatusAndUpdatedAtBefore(UserStatus status, LocalDateTime threshold);
 }
