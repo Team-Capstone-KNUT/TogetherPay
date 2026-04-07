@@ -3,6 +3,9 @@ package com.devcrew.togetherpay.domain.team.service;
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.team.TeamRole;
 import com.devcrew.togetherpay.domain.team.TeamUser;
+import com.devcrew.togetherpay.domain.team.dto.MemberResponse;
+import com.devcrew.togetherpay.domain.team.dto.TeamDetailResponse;
+import com.devcrew.togetherpay.domain.team.dto.TeamSimpleResponse;
 import com.devcrew.togetherpay.domain.team.repository.TeamRepository;
 import com.devcrew.togetherpay.domain.team.repository.TeamUserRepository;
 import com.devcrew.togetherpay.domain.user.User;
@@ -13,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -108,6 +113,58 @@ public class TeamService {
         // 엔티티에 생성해둔 팀 이름 변경 편의 메서드 호출
         team.updateName(newName);
         log.info("팀 이름 수정 완료. teamId: {}, newName: {}", teamId, newName);
+    }
+
+    /**
+     * 팀 조회
+     * @param userId
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public List<TeamSimpleResponse> getMyTeams(Long userId) {
+
+        List<TeamUser> myTeamUsers = teamUserRepository.findAllByUserIdWithTeam(userId);
+
+        return myTeamUsers.stream()
+                .map(tu -> TeamSimpleResponse.builder()
+                        .teamId(tu.getTeam().getId())
+                        .name(tu.getTeam().getName())
+                        .myrole(tu.getRole())
+                        .build()
+                ).toList();
+    }
+
+    /**
+     * 팀 상세 조회
+     * @param userId
+     * @param teamId
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public TeamDetailResponse getTeamDetail(Long userId, Long teamId) {
+        Team team = getTeamOrThrow(teamId);
+        User user = getUserOrThrow(userId);
+
+        // 팀에 속한 멤버인지 권한 검증
+        getTeamUserOrThrow(team, user);
+
+        // 팀에 속한 전체 멤버 목록 조회
+        List<TeamUser> teamMembers = teamUserRepository.findAllByTeamIdWithUser(teamId);
+
+        List<MemberResponse> memberResponses = teamMembers.stream()
+                .map(tu -> MemberResponse.builder()
+                        .userId(tu.getUser().getId())
+                        .nickname(tu.getUser().getNickname())
+                        .role(tu.getRole())
+                        .build())
+                .toList();
+
+        return TeamDetailResponse.builder()
+                .teamId(team.getId())
+                .name(team.getName())
+                .inviteCode(team.getInviteCode())
+                .members(memberResponses)
+                .build();
     }
 
     /**

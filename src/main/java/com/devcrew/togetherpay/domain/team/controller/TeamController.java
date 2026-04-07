@@ -1,10 +1,7 @@
 package com.devcrew.togetherpay.domain.team.controller;
 
 import com.devcrew.togetherpay.domain.team.Team;
-import com.devcrew.togetherpay.domain.team.dto.CreateTeamRequest;
-import com.devcrew.togetherpay.domain.team.dto.JoinTeamRequest;
-import com.devcrew.togetherpay.domain.team.dto.TeamResponse;
-import com.devcrew.togetherpay.domain.team.dto.UpdateTeamRequest;
+import com.devcrew.togetherpay.domain.team.dto.*;
 import com.devcrew.togetherpay.domain.team.service.TeamService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/teams")
@@ -85,6 +84,33 @@ public class TeamController {
         teamService.updateTeamName(userId, teamId, request.name());
         // 200 Ok 응답 반환
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 팀 단순 조회
+     * @param userId
+     * @return
+     */
+    @GetMapping
+    public ResponseEntity<List<TeamSimpleResponse>> getMyTeams(
+            @AuthenticationPrincipal Long userId) {
+        List<TeamSimpleResponse> response = teamService.getMyTeams(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 특정 팀 조회
+     * @param userId
+     * @param teamId
+     * @return
+     */
+    @GetMapping("/{teamId}")
+    public ResponseEntity<TeamDetailResponse> getTeamDetail(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long teamId) {
+
+        TeamDetailResponse response = teamService.getTeamDetail(userId, teamId);
+        return ResponseEntity.ok(response);
     }
 
     /**
