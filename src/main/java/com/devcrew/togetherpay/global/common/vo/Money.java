@@ -2,6 +2,7 @@ package com.devcrew.togetherpay.global.common.vo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import java.math.RoundingMode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
