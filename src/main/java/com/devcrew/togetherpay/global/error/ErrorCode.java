@@ -22,6 +22,8 @@ public enum ErrorCode {
     TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "존재하지 않는 팀입니다."),
     INVALID_TEAM_PASSWORD(HttpStatus.BAD_REQUEST, "T002", "잘못된 팀 비밀번호입니다."),
     ALREADY_TEAM_MEMBER(HttpStatus.CONFLICT, "T003", "이미 팀에 가입된 멤버입니다."),
+    CANNOT_KICK_SELF(HttpStatus.BAD_REQUEST, "T006", "자기 자신을 강퇴할 수 없습니다."),
+    TEAM_LEADER_CANNOT_LEAVE(HttpStatus.CONFLICT, "T007", "방장은 팀을 위임하거나 팀을 삭제하기 전까지 탈퇴할 수 없습니다."),
 
     // 권한(Role)
     NOT_TEAM_LEADER(HttpStatus.FORBIDDEN, "R001", "방장만 접근 가능한 기능입니다."),

@@ -105,6 +105,60 @@ public class TeamService {
         log.info("팀 이름 수정 완료. teamId: {}, newName: {}", teamId, newName);
     }
 
+    /**
+     * 멤버 강퇴
+     * @param leaderId
+     * @param teamId
+     * @param targetUserId
+     */
+    @Transactional
+    public void kickMember(Long leaderId, Long teamId, Long targetUserId) {
+        // 해당 팀이 존재하는지 검증
+        Team team = getTeamOrThrow(teamId);
+        // 요청을 보낸 유저(leaderUser)가 존재하는지 검증
+        User leader = getUserOrThrow(leaderId);
+        // 강퇴할 유저(targetUser)가 존재하는지 검증
+        User targetUser = getUserOrThrow(targetUserId);
+        // 요청을 보낸 유저가 팀 내에 존재하는지 검증
+        TeamUser leaderUser = getTeamUserOrThrow(team, leader);
+        // 요청을 보낸 유저가 방장인지 권한을 검증
+        leaderUser.validateLeader();
+
+        // 방장이 자신을 강퇴하려는지를 확인한다.
+        if (leaderId.equals(targetUserId)) {
+            throw new BusinessException(ErrorCode.CANNOT_KICK_SELF);
+        }
+
+        // 강퇴할 대상 유저가 팀에 속하고 있는지 검증
+        TeamUser targetTeamUser = getTeamUserOrThrow(team, targetUser);
+        // 실제 삭제 부분
+        teamUserRepository.delete(targetTeamUser);
+
+        log.info("멤버 강퇴 완료. teamId: {}, leaderId: {}, kickedUserId: {}", teamId, leaderId, targetUserId);
+    }
+
+    /**
+     * 팀 탈퇴
+     * @param userId
+     * @param teamId
+     */
+    @Transactional
+    public void leaveTeam(Long userId, Long teamId) {
+        // 해당 팀이 존재하는지 먼저 검증
+        Team team = getTeamOrThrow(teamId);
+        // 해당 유저가 존재하는지 검증
+        User user = getUserOrThrow(userId);
+        // 해당 팀 내에 유저가 속하고 있는지 검증
+        TeamUser teamUser = getTeamUserOrThrow(team, user);
+        // 해당 유저의 권한이 리더가 아닌 경우, 예외 발생시킨다.(방장은 바로 탈퇴 불가능)
+        if (teamUser.getRole() == TeamRole.LEADER) {
+            throw new BusinessException(ErrorCode.TEAM_LEADER_CANNOT_LEAVE);
+        }
+        // 해당 유저는 팀에서 탈퇴된다.
+        teamUserRepository.delete(teamUser);
+        log.info("팀 탈퇴 완료. teamId: {}, userId: {}", teamId, userId);
+    }
+
     // 유저 검증 메서드(유저 존재여부)
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)

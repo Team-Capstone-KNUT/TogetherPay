@@ -86,4 +86,38 @@ public class TeamController {
         // 200 Ok 응답 반환
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * 멤버 강퇴(리더 권한자만) API
+     * @param leaderId
+     * @param teamId
+     * @param targetUserId
+     * @return
+     */
+    @DeleteMapping("/{teamId}/users/{targetUserId}")
+    public ResponseEntity<Void> kickMember(
+            @AuthenticationPrincipal Long leaderId,
+            @PathVariable Long teamId,
+            @PathVariable Long targetUserId) {
+        // 멤버 강퇴 비즈니스 로직 호출, 파라미터로 leaderId(리더 권한 유저), teamId(해당 팀 식별자), targetId(추방할 타겟 멤버)를 넘겨주었다.
+        teamService.kickMember(leaderId, teamId, targetUserId);
+        // 반환값이 없으니 noContent 리턴한다.
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 팀 탈퇴 API
+     * @param userId
+     * @param teamId
+     * @return
+     */
+    @DeleteMapping("/{teamId}/users/me")
+    public ResponseEntity<Void> leaveTeam(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long teamId) {
+        // 팀 탈퇴 비즈니스 로직 호출, 파라미터로 userId, teamId를 넘겨줬다.
+        teamService.leaveTeam(userId, teamId);
+        // 반환값이 없으니 noContent 리턴한다.
+        return ResponseEntity.noContent().build();
+    }
 }
