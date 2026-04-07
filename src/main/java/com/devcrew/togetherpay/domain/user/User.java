@@ -1,16 +1,19 @@
 package com.devcrew.togetherpay.domain.user;
 
+import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+
 @Entity
 @Getter
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
@@ -29,6 +32,12 @@ public class User {
 
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "user")
+    private List<Participant> participants = new ArrayList<>();
+
     @Builder
     public User(String email, String nickname, UserRole role, Provider provider, String providerId) {
         this.email = email;
@@ -42,6 +51,10 @@ public class User {
         if (newNickname != null && !newNickname.isBlank()) {
             this.nickname = newNickname;
         }
+    }
+
+    public void withdraw() {
+        this.status = UserStatus.WITHDRAWN;
     }
 
 
