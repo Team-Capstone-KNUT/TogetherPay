@@ -12,4 +12,6 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
     boolean existsByTeamAndUser(Team team, User user);
     // 예산/지출 등 도메인 로직 시 특정 팀원의 정보, 권한 조회 메서드
     Optional<TeamUser> findByTeamAndUser(Team team, User user);
+    // 내가 속한 팀에 특정 입력한 이름과 일치하는 팀이 있는지 확인
+    boolean existsByUserAndTeam_Name(User user, String teamName);
 }

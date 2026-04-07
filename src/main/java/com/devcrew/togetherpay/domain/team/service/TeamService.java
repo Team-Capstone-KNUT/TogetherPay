@@ -33,6 +33,11 @@ public class TeamService {
     public Team createTeam(Long userId, String name, String password) {
         // 유저 검증 메서드 호출
         User user = getUserOrThrow(userId);
+        // 같은 유저는 같은 이름의 팀을 생성할 수 없다.
+        if (teamUserRepository.existsByUserAndTeam_Name(user, name)) {
+            log.warn("팀 생성 중복 시도. userId: {}, teamName: {}", userId, name);
+            throw new BusinessException(ErrorCode.TEAM_NAME_ALREADY_EXISTS);
+        }
         // 팀 생성 팩토리 메서드 호출(name, password)
         Team team = Team.createTeam(name, password);
         // 위에서 생성한 팀 객체와 유저 객체를 팩토리 메서드로 전달, role까지 묶어서 만들어줌
