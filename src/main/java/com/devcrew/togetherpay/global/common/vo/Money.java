@@ -25,6 +25,23 @@ public class Money {
         return new Money(amount);
     }
 
+    // 원화로 변환.
+    public Integer toWons(BigDecimal amount) {
+        return amount.setScale(0, RoundingMode.HALF_UP).intValue(); // 소수점 x 반올림.
+    }
+    
+    public Integer toWons() {
+        return amount.setScale(0, RoundingMode.HALF_UP).intValue(); // 소수점 x 반올림.
+    }
+    
+    public Money calculateMultiply(BigDecimal exchangeRate) {
+        BigDecimal result = this.getAmount()
+            .multiply(exchangeRate)
+            .setScale(2, RoundingMode.HALF_UP); // 소수점 2자리 반올림
+    
+        return Money.of(result);
+    }
+
     private Money(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("금액은 0보다 작을 수 없습니다.");
