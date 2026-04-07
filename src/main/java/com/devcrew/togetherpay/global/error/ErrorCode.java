@@ -31,7 +31,17 @@ public enum ErrorCode {
     TEAM_MEMBER_NOT_FOUND(HttpStatus.FORBIDDEN, "R002", "해당 팀에 소속된 멤버가 아닙니다."),
 
     // 예산(Budget)
-    BUDGET_ALREADY_EXISTS(HttpStatus.CONFLICT, "B001", "해당 날짜에는 이미 예산이 설정되어 있습니다,");
+    BUDGET_ALREADY_EXISTS(HttpStatus.CONFLICT, "B001", "해당 날짜에는 이미 예산이 설정되어 있습니다."),
+
+    // 지출(Expense)
+    EXPENSE_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "존재하지 않는 지출입니다."),
+    NOT_A_TEAM_USER(HttpStatus.FORBIDDEN, "E002", "해당 팀에 속한 멤버가 아닙니다."),
+    INVALID_PAYER_COUNT(HttpStatus.BAD_REQUEST, "E003", "결제자는 반드시 1명이어야 합니다."),
+
+    // 정산(Settlement)
+    SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 정산입니다."),
+    PAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "S002", "결제자를 찾을 수 없습니다."),
+    NOT_MATCH_USER(HttpStatus.FORBIDDEN, "S003", "정산 요청 권한이 없습니다.");
 
     private final HttpStatus status;
     private final String code;

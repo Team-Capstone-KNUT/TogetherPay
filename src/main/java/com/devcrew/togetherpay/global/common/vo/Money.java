@@ -2,6 +2,7 @@ package com.devcrew.togetherpay.global.common.vo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import java.math.RoundingMode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,23 @@ public class Money {
 
     public static Money of(BigDecimal amount) {
         return new Money(amount);
+    }
+
+    // 원화로 변환.
+    public Integer toWons(BigDecimal amount) {
+        return amount.setScale(0, RoundingMode.HALF_UP).intValue(); // 소수점 x 반올림.
+    }
+    
+    public Integer toWons() {
+        return amount.setScale(0, RoundingMode.HALF_UP).intValue(); // 소수점 x 반올림.
+    }
+    
+    public Money calculateMultiply(BigDecimal exchangeRate) {
+        BigDecimal result = this.getAmount()
+            .multiply(exchangeRate)
+            .setScale(2, RoundingMode.HALF_UP); // 소수점 2자리 반올림
+    
+        return Money.of(result);
     }
 
     private Money(BigDecimal amount) {
