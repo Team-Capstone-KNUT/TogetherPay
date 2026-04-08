@@ -3,6 +3,7 @@ package com.devcrew.togetherpay.global.common.ExchangeRate.service;
 import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.global.common.ExchangeRate.dto.FindExchangeRateResponse;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -52,10 +53,6 @@ public class ExchangeRateService {
    * 매매기준율로 반환.
    */
   public BigDecimal getExchangeRate(Currency currency, LocalDate expenseDate) {
-    if (currency == Currency.KRW) {
-      return null;
-    }
-
     FindExchangeRateResponse response = searchExchange(currency, expenseDate);
 
     if (response == null || response.dealBasR() == null) {
@@ -64,7 +61,14 @@ public class ExchangeRateService {
 
     // ',' 쉼표 제거
     String rateStr = response.dealBasR().replace(",", "");
-    return new BigDecimal(rateStr);
+    BigDecimal rate = new BigDecimal(rateStr);
+
+    if (currency == Currency.JPY) {
+      BigDecimal JPYToKRW = rate.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+      return JPYToKRW;
+    }
+
+    return rate;
   }
 
 }

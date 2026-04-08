@@ -55,7 +55,7 @@ public class SettlementService {
           return Settlement.of(p.getKrwAmount(), expense, p.getUser());
         }).toList();
 
-    expense.insertSettlements(settlements);
+    expense.addSettlements(settlements);
 
     settlementRepository.saveAll(settlements);
   }

@@ -86,9 +86,11 @@ public class Expense extends BaseTimeEntity {
   @JoinColumn(name = "team_id")
   private Team team;
 
+  @Builder.Default
   @OneToMany(mappedBy = "expense", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Participant> participants = new ArrayList<>();
 
+  @Builder.Default
   @OneToMany(mappedBy = "expense", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Settlement> settlements = new ArrayList<>();
 
@@ -109,8 +111,8 @@ public class Expense extends BaseTimeEntity {
     this.participants.clear();
   }
 
-  public void insertSettlements(List<Settlement> settlements) {
-    this.settlements = settlements;
+  public void addSettlements(List<Settlement> settlements) {
+    this.settlements.addAll(settlements);
   }
 
   // 전체 금액 * 환율 = 전체 금액(KRW) 지정.

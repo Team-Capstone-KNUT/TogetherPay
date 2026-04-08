@@ -4,6 +4,7 @@ import com.devcrew.togetherpay.domain.settlement.dto.FindDetailSettlementRespons
 import com.devcrew.togetherpay.domain.settlement.dto.FindSettlementsResponse;
 import com.devcrew.togetherpay.domain.settlement.service.SettlementService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class SettlementController {
       @PathVariable Long expenseId
   ) {
     settlementService.create(userId, expenseId);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   // 정산 상세 조회 [지출 참여자]
@@ -44,6 +45,13 @@ public class SettlementController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long expenseId
   ) {
+    // 절 파라미터 패딩 (IN Clause Parameter Padding) 현상 있음. 로그가 몇 1000건씩 찍힘.
+//    hibernate:
+//    format_sql: true # SQL문을 예쁘게 줄바꿈해서 보여줌
+//    default_batch_fetch_size: 1000 # N+1 문제 방지용 필수 세팅!
+//        query:
+//    in_clause_parameter_padding: true
+    // 설정 때문에 그런듯...
     FindSettlementsResponse response = settlementService.getSettlements(userId, expenseId);
     return ResponseEntity.ok(response);
   }

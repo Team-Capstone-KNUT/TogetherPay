@@ -50,6 +50,7 @@ public record RegisterIndividualExpenseRequest(
         .description(description)
         .currency(currency)
         .category(category)
+        .expenseDate(expenseDate)
         .method(method)
         .participantInfos(from(participantRequests))
         .build();
