@@ -45,7 +45,7 @@ public class BudgetController {
             @PathVariable Long budgetId,
             @RequestBody UpdateBudgetRequest request) {
 
-        BudgetResponse response = BudgetService.updateBudget(userId, budgetId, request.amount());
+        BudgetResponse response = budgetService.updateBudget(userId, budgetId, request.amount());
         return ResponseEntity.ok(response);
     }
     )
