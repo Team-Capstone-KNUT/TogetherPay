@@ -48,7 +48,6 @@ public class BudgetController {
         BudgetResponse response = budgetService.updateBudget(userId, budgetId, request.amount());
         return ResponseEntity.ok(response);
     }
-    )
 
     @GetMapping("/teams/{teamId}")
     public ResponseEntity<List<BudgetResponse>> getBudgetsByTeam(
