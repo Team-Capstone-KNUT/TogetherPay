@@ -64,4 +64,9 @@ public class Budget extends BaseTimeEntity {
         // 잔액 = 기존 잔액 - 지출 금액
         this.balance = this.balance.subtract(expenseAmount);
     }
+
+    // 예산 수정 메서드(총 예산)
+    public void updateAmount(Money newAmount) {
+        this.totalAmount = newAmount;
+    }
 }

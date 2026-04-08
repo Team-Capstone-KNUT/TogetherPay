@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -61,6 +62,47 @@ public class BudgetService {
         return BudgetResponse.from(savedBudget);
     }
 
+    /**
+     * 예산 수정
+     * @param userId
+     * @param budgetId
+     * @param newAmount
+     * @return
+     */
+    @Transactional
+    public BudgetResponse updateBudget(Long userId, Long budgetId, Long newAmount) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_NOT_FOUND));
+
+        User user = getUserOrThrow(userId);
+        Team team = budget.getTeam();
+        TeamUser teamUser = getTeamUserOrThrow(team, user);
+        teamUser.validateLeader();
+
+        budget.updateAmount(Money.wons(newAmount));
+
+        return BudgetResponse.from(budget);
+    }
+
+    /**
+     * 예산 조회(팀 멤버만 가능함)
+     * @param userId
+     * @param teamId
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public List<BudgetResponse> getBudgetsByTeam(Long userId, Long teamId) {
+        Team team = getTeamOrThrow(teamId);
+        User user = getUserOrThrow(userId);
+
+        getTeamUserOrThrow(team, user);
+
+        List<Budget> budgets = budgetRepository.findAllByTeamOrderByBudgetDateAsc(team);
+
+        return budgets.stream()
+                .map(BudgetResponse::from)
+                .toList();
+    }
     // 유저 검증 메서드(유저 존재 여부)
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)
