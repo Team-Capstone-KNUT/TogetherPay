@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/teams/{teamId}/budgets")
+@RequestMapping("api/v1/teams/budgets")
 @RequiredArgsConstructor
 public class BudgetController {
     private final BudgetService budgetService;
@@ -49,7 +49,7 @@ public class BudgetController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/teams/{teamId}")
+    @GetMapping("/{teamId}")
     public ResponseEntity<List<BudgetResponse>> getBudgetsByTeam(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long teamId) {
