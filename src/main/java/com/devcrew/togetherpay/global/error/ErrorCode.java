@@ -33,6 +33,7 @@ public enum ErrorCode {
     // 예산(Budget)
     BUDGET_ALREADY_EXISTS(HttpStatus.CONFLICT, "B001", "해당 날짜에는 이미 예산이 설정되어 있습니다."),
     BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND, "B002", "등록된 예산을 찾을 수 없습니다."),
+    BUDGET_CANNOT_BE_LESS_THAN_EXPENSE(HttpStatus.CONFLICT,"B003", "이미 지출한 예산보다 예산을 적게 설정할 수 없습니다."), // 상태코드 검토 필요
 
     // 지출(Expense)
     EXPENSE_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "존재하지 않는 지출입니다."),

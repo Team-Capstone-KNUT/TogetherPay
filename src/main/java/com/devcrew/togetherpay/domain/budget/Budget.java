@@ -3,12 +3,15 @@ package com.devcrew.togetherpay.domain.budget;
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import com.devcrew.togetherpay.global.common.vo.Money;
+import com.devcrew.togetherpay.global.error.ErrorCode;
+import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -67,6 +70,15 @@ public class Budget extends BaseTimeEntity {
 
     // 예산 수정 메서드(총 예산)
     public void updateAmount(Money newAmount) {
+        // 기존 예산과 새로운 예산 차액 계산(새로운 예산 - 기존 예산)
+        Money difference = newAmount.subtract(this.totalAmount);
+        // 총 예산 변경
         this.totalAmount = newAmount;
+        // 잔액에 차액을 더해 동기화
+        this.balance = this.balance.add(difference);
+        // 총 예산이 마이너스가 될 경우 예외 발생
+        if (this.balance.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException(ErrorCode.BUDGET_CANNOT_BE_LESS_THAN_EXPENSE);
+        }
     }
 }
