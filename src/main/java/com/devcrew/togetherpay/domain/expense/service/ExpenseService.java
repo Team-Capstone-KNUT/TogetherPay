@@ -57,7 +57,7 @@ public class ExpenseService {
     // 결제자 1명 검증
     validateSinglePayer(participantInfos);
 
-    BigDecimal divideAmount = calculateDutchAmount(participantInfos, command.totalAmount());
+    BigDecimal[] divAndRem = calculateDutchAmount(participantInfos, command.totalAmount());
 
     // 결제한 날짜 환율 조회
     BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
@@ -66,8 +66,16 @@ public class ExpenseService {
 
     expense.calculateKRW();
 
+    BigDecimal baseAmount = divAndRem[0]; // 몫
+    BigDecimal remainder = divAndRem[1]; // 나머지
+
     // 참여자 할당
-    assignParticipants(expense, participantInfos, p -> divideAmount);
+    assignParticipants(expense, participantInfos, p -> { // 인수 안에 함수가 들어간 것 뿐.
+      if (p.isPayer()) {
+        return baseAmount.add(remainder);
+      }
+      return baseAmount;
+    });
 
     expenseRepository.save(expense);
   }
@@ -251,14 +259,11 @@ public class ExpenseService {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
-  private BigDecimal calculateDutchAmount(List<ParticipantInfo> participantInfos, BigDecimal totalAmount) {
-    int count = participantInfos.size();
+  private BigDecimal[] calculateDutchAmount(List<ParticipantInfo> participantInfos, BigDecimal totalAmount) {
 
-    return totalAmount.divide(
-        BigDecimal.valueOf(count),
-        2,
-        RoundingMode.HALF_UP
-    );
+    int count = participantInfos.size();
+    BigDecimal[] divAndRem = totalAmount.divideAndRemainder(BigDecimal.valueOf(count));
+    return divAndRem;
   }
 
   private void assignParticipants(Expense expense, List<ParticipantInfo> participantInfos, Function<ParticipantInfo, BigDecimal> amountProvider) {
@@ -277,14 +282,22 @@ public class ExpenseService {
   }
 
   private void updateDutchPay(Expense expense, UpdateExpenseCommand command) {
-    BigDecimal divideAmount =
+    BigDecimal[] divAndRem =
         calculateDutchAmount(command.participantInfos(), command.totalAmount());
 
     BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
 
     expense.updateInfo(command.title(), command.description(),
         command.currency(), command.category(), command.expenseDate(), command.method(), command.totalAmount(), exchangeRate);
-    assignParticipants(expense, command.participantInfos(), p -> divideAmount);
+
+    BigDecimal baseAmount = divAndRem[0];
+    BigDecimal remainder = divAndRem[1];
+    assignParticipants(expense, command.participantInfos(), p -> {
+      if (p.isPayer()) {
+        return baseAmount.add(remainder);
+      }
+      return baseAmount;
+    });
   }
 
   private void updateIndividualAmount(Expense expense, UpdateExpenseCommand command) {
