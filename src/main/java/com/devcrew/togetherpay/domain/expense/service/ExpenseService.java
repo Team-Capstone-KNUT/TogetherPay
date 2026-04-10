@@ -46,7 +46,7 @@ public class ExpenseService {
    */
   public void registerWithDutchPay(Long userId, RegisterDutchExpenseCommand command) {
 
-    // 선택한 팀 조회
+    // 선택한 팀이 실제로 존재하는지 검증
     Team selectedTeam = findByTeamId(command.teamId());
 
     List<ParticipantInfo> participantInfos = command.participantInfos();
@@ -57,7 +57,10 @@ public class ExpenseService {
     // 결제자 1명 검증
     validateSinglePayer(participantInfos);
 
-    BigDecimal divideAmount = calculateDutchAmount(participantInfos, command.totalAmount());
+    // N분의 1 금액(몫)과 남는 금액(나머지)을 정확하게 분리한다.
+    BigDecimal[] divAndRem = command.totalAmount().divideAndRemainder(BigDecimal.valueOf(participantInfos.size()));
+    BigDecimal baseAmount = divAndRem[0]; // 몫
+    BigDecimal remainder = divAndRem[1]; // 나머지
 
     // 결제한 날짜 환율 조회
     BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
@@ -66,8 +69,13 @@ public class ExpenseService {
 
     expense.calculateKRW();
 
-    // 참여자 할당
-    assignParticipants(expense, participantInfos, p -> divideAmount);
+    // 결제자에게 기본 금액(n빵 가격)에 남는 금액을 더해주고, 아니라면 기본 금액만 낸다.
+    assignParticipants(expense, participantInfos, p -> {
+      if (p.isPayer()) {
+        return baseAmount.add(remainder);
+      }
+      return baseAmount;
+    });
 
     expenseRepository.save(expense);
   }
@@ -277,14 +285,23 @@ public class ExpenseService {
   }
 
   private void updateDutchPay(Expense expense, UpdateExpenseCommand command) {
-    BigDecimal divideAmount =
-        calculateDutchAmount(command.participantInfos(), command.totalAmount());
+
+    BigDecimal[] divAndRem = command.totalAmount().divideAndRemainder(BigDecimal.valueOf(command.participantInfos().size()));
+    BigDecimal baseAmount = divAndRem[0];
+    BigDecimal remainder = divAndRem[1];
 
     BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
 
     expense.updateInfo(command.title(), command.description(),
         command.currency(), command.category(), command.expenseDate(), command.method(), command.totalAmount(), exchangeRate);
-    assignParticipants(expense, command.participantInfos(), p -> divideAmount);
+
+    // 결제자에게 기본 금액 + 나머지 금액 더해서 반환
+    assignParticipants(expense, command.participantInfos(), p -> {
+      if (p.isPayer()) {
+        return baseAmount.add(remainder);
+      }
+      return baseAmount;
+    });
   }
 
   private void updateIndividualAmount(Expense expense, UpdateExpenseCommand command) {
