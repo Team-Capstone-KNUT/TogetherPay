@@ -6,7 +6,7 @@ public record FindSettlementResponse(
     Long settlementId,
     String expenseTitle,
     String nickname,
-    Integer amount,
+    Long amount,
     Boolean isSettled
 ) {
   public static FindSettlementResponse of(Settlement settlement) {

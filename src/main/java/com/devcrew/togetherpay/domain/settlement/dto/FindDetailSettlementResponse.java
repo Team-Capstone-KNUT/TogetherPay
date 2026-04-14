@@ -7,7 +7,7 @@ import lombok.Builder;
 public record FindDetailSettlementResponse(
     Long settlementId,
     Long expenseId,
-    Integer amount,
+    Long amount,
     Boolean isSettled,
     String expenseTitle,
     String nickname
