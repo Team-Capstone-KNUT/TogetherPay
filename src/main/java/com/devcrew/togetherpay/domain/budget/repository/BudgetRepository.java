@@ -1,15 +1,19 @@
 package com.devcrew.togetherpay.domain.budget.repository;
 
 import com.devcrew.togetherpay.domain.budget.Budget;
-import com.devcrew.togetherpay.domain.team.Team;
+import com.devcrew.togetherpay.domain.trip.Trip;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
-    // 특정 팀의 특정 날짜에 이미 등록된 예산이 있는지 여부 확인(중복 검사)
-    boolean existsByTeamAndBudgetDate(Team team, LocalDate budgetDate);
 
-    List<Budget> findAllByTeamOrderByBudgetDateAsc(Team team);
+    boolean existsByTripAndBudgetDate(Trip trip, LocalDate budgetDate);
+
+    Optional<Budget> findByTripAndBudgetDate(Trip trip, LocalDate budgetDate);
+
+    // 특정 여행 예산을 날짜순으로 조회(오름차순)
+    List<Budget> findAllByTripOrderByBudgetDateAsc(Trip trip);
 }
