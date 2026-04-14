@@ -2,7 +2,7 @@ package com.devcrew.togetherpay.domain.expense;
 
 import com.devcrew.togetherpay.domain.expense.dto.ParticipantResponse;
 import com.devcrew.togetherpay.domain.settlement.Settlement;
-import com.devcrew.togetherpay.domain.team.Team;
+import com.devcrew.togetherpay.domain.trip.Trip;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import com.devcrew.togetherpay.global.common.vo.Money;
 import jakarta.persistence.AttributeOverride;
@@ -82,9 +82,10 @@ public class Expense extends BaseTimeEntity {
   @Enumerated(EnumType.STRING)
   private PaymentMethod paymentMethod;
 
+  // 연관관계 추가(Trip)
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "team_id")
-  private Team team;
+  @JoinColumn(name = "trip_id")
+  private Trip trip;
 
   @Builder.Default
   @OneToMany(mappedBy = "expense", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
