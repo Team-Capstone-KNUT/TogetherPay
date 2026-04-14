@@ -16,8 +16,9 @@ import java.util.List;
 public record UpdateExpenseRequest(
     @NotNull(message = "더치페이 여부는 필수입니다.")
     Boolean isDutchPay,
-    @NotNull(message = "팀 ID는 필수입니다.")
-    Long teamId,
+
+    @NotNull(message = "여행(Trip) ID는 필수입니다.")
+    Long tripId,
 
     @NotBlank(message = "지출 제목을 입력해주세요.")
     @Size(min = 2, max = 50, message = "제목은 2자 이상 50자 이하로 입력해주세요.")
@@ -49,7 +50,7 @@ public record UpdateExpenseRequest(
   public UpdateExpenseCommand toCommand() {
     return UpdateExpenseCommand.builder()
         .isDutchPay(isDutchPay)
-        .teamId(teamId)
+        .tripId(tripId)
         .title(title)
         .description(description)
         .currency(currency)
