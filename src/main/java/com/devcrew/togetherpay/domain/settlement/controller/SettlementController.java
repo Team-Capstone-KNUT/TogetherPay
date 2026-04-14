@@ -45,24 +45,17 @@ public class SettlementController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long expenseId
   ) {
-    // 절 파라미터 패딩 (IN Clause Parameter Padding) 현상 있음. 로그가 몇 1000건씩 찍힘.
-//    hibernate:
-//    format_sql: true # SQL문을 예쁘게 줄바꿈해서 보여줌
-//    default_batch_fetch_size: 1000 # N+1 문제 방지용 필수 세팅!
-//        query:
-//    in_clause_parameter_padding: true
-    // 설정 때문에 그런듯...
     FindSettlementsResponse response = settlementService.getSettlements(userId, expenseId);
     return ResponseEntity.ok(response);
   }
 
-  // 팀 정산 목록 조회 [팀 멤버]
-  @GetMapping("/team/{teamId}")
-  public ResponseEntity<FindSettlementsResponse> getTeamSettlements(
+  // 여행 정산 목록 조회 [여행 멤버]
+  @GetMapping("/trips/{tripId}")
+  public ResponseEntity<FindSettlementsResponse> getTripSettlements(
       @AuthenticationPrincipal Long userId,
-      @PathVariable Long teamId
+      @PathVariable Long tripId
   ) {
-    FindSettlementsResponse response = settlementService.getTeamSettlements(userId, teamId);
+    FindSettlementsResponse response = settlementService.getTripSettlements(userId, tripId);
     return ResponseEntity.ok(response);
   }
 
