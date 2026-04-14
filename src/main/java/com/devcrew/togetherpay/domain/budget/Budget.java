@@ -1,6 +1,6 @@
 package com.devcrew.togetherpay.domain.budget;
 
-import com.devcrew.togetherpay.domain.team.Team;
+import com.devcrew.togetherpay.domain.trip.Trip;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import com.devcrew.togetherpay.global.common.vo.Money;
 import com.devcrew.togetherpay.global.error.ErrorCode;
@@ -25,8 +25,8 @@ public class Budget extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "team_id", nullable = false)
-    private Team team;
+    @JoinColumn(name = "trip_id", nullable = false)
+    private Trip trip;
 
     @Column(nullable = false)
     private LocalDate budgetDate;
@@ -44,28 +44,29 @@ public class Budget extends BaseTimeEntity {
     private Money balance; // 남은 잔액
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Budget(Team team, LocalDate budgetDate, Money totalAmount) {
-        this.team = team;
+    private Budget(Trip trip, LocalDate budgetDate, Money totalAmount) {
+        this.trip = trip;
         this.budgetDate = budgetDate;
         this.totalAmount = totalAmount;
         this.balance = totalAmount; // 처음 생성 지점 잔액은 총 예산과 동일함.
     }
 
-    public static Budget createDailyBudget(Team team, LocalDate budgetDate, Money amount) {
+    public static Budget createDailyBudget(Trip trip, LocalDate budgetDate, Money amount) {
         return Budget.builder()
-                .team(team)
+                .trip(trip)
                 .budgetDate(budgetDate)
                 .totalAmount(amount)
                 .build();
     }
 
     public void spend(Money expenseAmount) {
-        if (this.balance.getAmount().compareTo(expenseAmount.getAmount())< 0) {
-
-        }
-
-        // 잔액 = 기존 잔액 - 지출 금액
+        // 지출 금액만큼 잔액을 차감합니다. (마이너스 잔액 허용 = 예산 초과 상태)
         this.balance = this.balance.subtract(expenseAmount);
+    }
+
+    // 지출 취소 시 잔액 복구 메서드
+    public void refund(Money canceledAmount) {
+        this.balance = this.balance.add(canceledAmount);
     }
 
     // 예산 수정 메서드(총 예산)
