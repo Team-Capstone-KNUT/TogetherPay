@@ -26,7 +26,7 @@ public class Settlement {
   public Long id;
 
   @Column(nullable = false)
-  private Integer amount;
+  private Long amount;
 
   @Builder.Default
   @Column(nullable = false)
@@ -40,7 +40,7 @@ public class Settlement {
   @JoinColumn(name = "user_id")
   User user;
 
-  public static Settlement of(Integer amount, Expense expense, User user) {
+  public static Settlement of(Long amount, Expense expense, User user) {
     return Settlement.builder()
         .amount(amount)
         .expense(expense)
