@@ -10,6 +10,9 @@ import com.devcrew.togetherpay.domain.settlement.repository.SettlementRepository
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.team.TeamUser;
 import com.devcrew.togetherpay.domain.team.repository.TeamRepository;
+import com.devcrew.togetherpay.domain.team.repository.TeamUserRepository;
+import com.devcrew.togetherpay.domain.trip.Trip;
+import com.devcrew.togetherpay.domain.trip.repository.TripRepository;
 import com.devcrew.togetherpay.domain.user.User;
 import com.devcrew.togetherpay.domain.user.repository.UserRepository;
 import com.devcrew.togetherpay.global.error.ErrorCode;
@@ -25,7 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class SettlementService {
 
   private final UserRepository userRepository;
-  private final TeamRepository teamRepository;
+  private final TripRepository tripRepository;
+  private final TeamUserRepository teamUserRepository;
   private final ExpenseRepository expenseRepository;
   private final SettlementRepository settlementRepository;
 
@@ -51,9 +55,11 @@ public class SettlementService {
         .toList();
 
     List<Settlement> settlements = participants.stream()
-        .map(p -> {
-          return Settlement.of(p.getKrwAmount(), expense, p.getUser());
-        }).toList();
+            .map(p -> {
+              // Integer -> Long으로 변경해서 타입캐스팅
+              Long amount = p.getKrwAmount() != null ? p.getKrwAmount().longValue() : 0L;
+              return Settlement.of(amount, expense, p.getUser());
+            }).toList();
 
     expense.addSettlements(settlements);
 
@@ -79,18 +85,20 @@ public class SettlementService {
 
   /**
    * @param userId
-   * @param teamId
+   * @param tripId
    * @return FindSettlementsResponse
-   * 팀 정산 목록 조회 [팀 멤버]
+   * 특정 여행의 정산 목록 조회
    */
   @Transactional(readOnly = true)
-  public FindSettlementsResponse getTeamSettlements(Long userId, Long teamId) {
+  public FindSettlementsResponse getTripSettlements(Long userId, Long tripId) {
+    // 여행 조회
+    Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.TRIP_NOT_FOUND)); // 에러코드 필요
+
     // 팀 멤버 검증
-    Team team = getTeam(teamId);
+    validateUserIsTeamMember(userId, trip.getTeam());
 
-    validateTeamMember(userId, team.getTeamUsers());
-
-    List<Settlement> settlements = settlementRepository.findByExpense_Team_Id(teamId);
+    List<Settlement> settlements = settlementRepository.findByExpense_Trip_Id(tripId);
 
     return FindSettlementsResponse.of(settlements);
   }
@@ -154,16 +162,9 @@ public class SettlementService {
     return user;
   }
 
-  private Team getTeam(Long teamId) {
-    Team team = teamRepository.findById(teamId)
-        .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
-    return team;
-  }
-
-  private void validateTeamMember(Long userId, List<TeamUser> teamUsers) {
-    boolean isMember = teamUsers.stream()
-        .anyMatch(tu -> tu.getUser().getId().equals(userId));
-    if (!isMember) {
+  private void validateUserIsTeamMember(Long userId, Team team) {
+    User user = getUser(userId);
+    if (!teamUserRepository.existsByTeamAndUser(team, user)) {
       throw new BusinessException(ErrorCode.NOT_A_TEAM_USER);
     }
   }
