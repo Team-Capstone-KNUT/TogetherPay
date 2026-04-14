@@ -16,8 +16,8 @@ import lombok.Builder;
 
 @Builder
 public record RegisterIndividualExpenseRequest(
-    @NotNull(message = "팀 ID는 필수입니다.")
-    Long teamId,
+    @NotNull(message = "여행(Trip) ID는 필수입니다.")
+    Long tripId,
 
     @NotBlank(message = "지출 제목을 입력해주세요.")
     @Size(min = 2, max = 50, message = "제목은 2자 이상 50자 이하로 입력해주세요.")
@@ -45,7 +45,7 @@ public record RegisterIndividualExpenseRequest(
 
   public RegisterIndividualExpenseCommand toCommand() {
     return RegisterIndividualExpenseCommand.builder()
-        .teamId(teamId)
+        .tripId(tripId)
         .title(title)
         .description(description)
         .currency(currency)
