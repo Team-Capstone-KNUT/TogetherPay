@@ -61,7 +61,7 @@ public class TeamUser extends BaseTimeEntity {
     // 권한 검증 메서드
     public void validateLeader() {
         if (this.role != TeamRole.LEADER) {
-            throw new BusinessException(ErrorCode.NOT_TEAM_LEADER);
+            throw new BusinessException(ErrorCode.NOT_A_TEAM_LEADER);
         }
     }
 }
