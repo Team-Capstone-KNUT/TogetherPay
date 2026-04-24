@@ -31,11 +31,12 @@ public class BudgetController {
     }
 
     @GetMapping("/trips/{tripId}")
-    public ResponseEntity<List<BudgetResponse>> getBudgetsByTrip(
+    public ResponseEntity<BudgetResponse> getBudgetByTrip(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long tripId) {
 
-        List<BudgetResponse> response = budgetService.getBudgetsByTrip(userId, tripId);
+        BudgetResponse response = budgetService.getBudgetByTrip(userId, tripId);
+
         return ResponseEntity.ok(response);
 
     }

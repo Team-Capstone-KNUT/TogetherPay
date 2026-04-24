@@ -6,16 +6,14 @@ import java.time.LocalDate;
 
 public record BudgetResponse(
         Long BudgetId,
-        LocalDate budgetDate,
         Long totalAmount,
-        Long balance
+        Long remainingAmount
 ) {
     public static BudgetResponse from(Budget budget) {
         return new BudgetResponse(
                 budget.getId(),
-                budget.getBudgetDate(),
                 budget.getTotalAmount().getAmount().longValue(),
-                budget.getBalance().getAmount().longValue()
+                budget.getRemainingAmount().getAmount().longValue()
         );
     }
 }
