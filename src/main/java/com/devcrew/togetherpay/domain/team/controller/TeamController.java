@@ -99,7 +99,7 @@ public class TeamController {
     }
 
     /**
-     * 특정 팀 조회
+     * 특정 팀 상세 조회
      * @param userId
      * @param teamId
      * @return
