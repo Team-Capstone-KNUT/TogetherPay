@@ -79,7 +79,7 @@ public class ExpenseService {
     expenseRepository.save(expense);
 
     // 예산 차감
-    spendBudget(trip, command.expenseDate(), command.totalAmount());
+    spendBudget(trip, command.totalAmount());
   }
 
   /**
@@ -109,7 +109,7 @@ public class ExpenseService {
     expenseRepository.save(expense);
 
     // 예산 차감
-    spendBudget(trip, command.expenseDate(), totalAmount);
+    spendBudget(trip, totalAmount);
   }
 
   /**
@@ -155,7 +155,7 @@ public class ExpenseService {
     trip.validateDate(command.expenseDate());
 
     // 기존 금액을 예산에 환불(복구)
-    refundBudget(trip, expense.getExpenseDate(), expense.getTotalAmount());
+    refundBudget(trip, expense.getTotalAmount());
 
     expense.clearParticipants();
 
@@ -169,7 +169,7 @@ public class ExpenseService {
     }
 
     // 새로운 날짜/금액으로 예산 다시 차감
-    spendBudget(trip, command.expenseDate(), newTotalAmount);
+    spendBudget(trip, newTotalAmount);
   }
 
   /**
@@ -184,19 +184,19 @@ public class ExpenseService {
     validateUserIsTeamMember(userId, team);
 
     // 지출 삭제 시, 기존 지출 금액을 예산에 환불(복구)
-    refundBudget(expense.getTrip(), expense.getExpenseDate(), expense.getTotalAmount());
+    refundBudget(expense.getTrip(), expense.getTotalAmount());
 
     expenseRepository.delete(expense);
   }
 
-  private void spendBudget(Trip trip, LocalDate date, BigDecimal amount) {
-    Budget budget = budgetRepository.findByTripAndBudgetDate(trip, date)
+  private void spendBudget(Trip trip, BigDecimal amount) {
+    Budget budget = budgetRepository.findByTripId(trip.getId())
             .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_NOT_FOUND));
     budget.spend(Money.of(amount));
   }
 
-  private void refundBudget(Trip trip, LocalDate date, BigDecimal amount) {
-    Budget budget = budgetRepository.findByTripAndBudgetDate(trip, date)
+  private void refundBudget(Trip trip, BigDecimal amount) {
+    Budget budget = budgetRepository.findByTripId(trip.getId())
             .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_NOT_FOUND));
     budget.refund(Money.of(amount));
   }
