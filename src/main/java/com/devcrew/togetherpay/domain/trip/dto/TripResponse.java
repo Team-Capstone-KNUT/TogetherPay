@@ -4,7 +4,6 @@ import com.devcrew.togetherpay.domain.budget.dto.BudgetResponse;
 import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.domain.trip.Trip;
 import java.time.LocalDate;
-import java.util.List;
 import lombok.Builder;
 
 @Builder
@@ -15,7 +14,7 @@ public record TripResponse(
         LocalDate startDate,
         LocalDate endDate,
         Currency baseCurrency,
-        List<BudgetResponse> budgets
+        BudgetResponse budget
 ) {
     public static TripResponse from(Trip trip) {
         return TripResponse.builder()
@@ -25,10 +24,7 @@ public record TripResponse(
                 .startDate(trip.getStartDate())
                 .endDate(trip.getEndDate())
                 .baseCurrency(trip.getBaseCurrency())
-                // 여행에 묶인 예산도 response로 변환해서 내려줌.
-                .budgets(trip.getBudgets().stream()
-                        .map(BudgetResponse::from)
-                        .toList())
+                .budget(trip.getBudget() != null ? BudgetResponse.from(trip.getBudget()) : null)
                 .build();
     }
 }

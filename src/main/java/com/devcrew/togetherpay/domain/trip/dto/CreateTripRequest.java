@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Builder
@@ -23,9 +24,11 @@ public record CreateTripRequest(
         LocalDate endDate,
 
         @NotNull(message = "기준 통화를 선택해주세요.")
-        Currency baseCurrency
+        Currency baseCurrency,
+
+        @NotNull(message = "총 예산을 입력해주세요.")
+        BigDecimal totalBudget
 ) {
-    // Controller에서 Service로 넘길 Command 객체로 변환
     public CreateTripCommand toCommand() {
         return CreateTripCommand.builder()
                 .teamId(teamId)
@@ -33,6 +36,7 @@ public record CreateTripRequest(
                 .startDate(startDate)
                 .endDate(endDate)
                 .baseCurrency(baseCurrency)
+                .totalBudget(totalBudget)
                 .build();
     }
 }

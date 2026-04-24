@@ -41,14 +41,17 @@ public class Trip extends BaseTimeEntity {
     @JoinColumn(name = "team_id")
     private Team team;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Budget> budgets = new ArrayList<>();
+    @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Budget budget;
 
     @Builder.Default
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Expense> expenses = new ArrayList<>();
 
+    // 연관관계 편의 메서드
+    public void setBudget(Budget budget) {
+        this.budget = budget;
+    }
     // 여행 정보 수정 메서드
     public void updateInfo(String title, LocalDate startDate, LocalDate endDate) {
         validateDateRange(startDate, endDate);

@@ -5,6 +5,7 @@ import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.trip.Trip;
 import lombok.Builder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Builder
@@ -13,9 +14,9 @@ public record CreateTripCommand(
         String title,
         LocalDate startDate,
         LocalDate endDate,
-        Currency baseCurrency
+        Currency baseCurrency,
+        BigDecimal totalBudget
 ) {
-    // Command 객체에서 Team을 주입받아 Trip 엔티티를 생성.
     public Trip toEntity(Team team) {
         return Trip.builder()
                 .team(team)

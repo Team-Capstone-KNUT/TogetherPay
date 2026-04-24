@@ -1,6 +1,7 @@
 package com.devcrew.togetherpay.domain.trip.service;
 
 import com.devcrew.togetherpay.domain.budget.Budget;
+import com.devcrew.togetherpay.domain.budget.repository.BudgetRepository;
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.team.repository.TeamRepository;
 import com.devcrew.togetherpay.domain.team.repository.TeamUserRepository;
@@ -18,8 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -31,6 +30,7 @@ public class TripService {
     private final TeamRepository teamRepository;
     private final TeamUserRepository teamUserRepository;
     private final UserRepository userRepository;
+    private final BudgetRepository budgetRepository;
 
     public TripResponse createTrip(Long userId, CreateTripCommand command) {
         // 여행 시작일이 종료일보다 늦다면 예외 발생
@@ -46,23 +46,12 @@ public class TripService {
 
         // toEntity(team)으로 여행 엔티티 생성
         Trip trip = command.toEntity(team);
-
-        // [핵심 로직] 여행 기간에 맞춰 일자별로 0원의 예산을 생성
-        long daysBetween = ChronoUnit.DAYS.between(command.startDate(), command.endDate());
-
-        for (int i = 0; i <= daysBetween; i++) {
-            LocalDate budgetDate = command.startDate().plusDays(i);
-
-            Budget dailyBudget = Budget.createDailyBudget(
-                    trip,
-                    budgetDate,
-                    Money.wons(0L)
-            );
-
-            trip.getBudgets().add(dailyBudget);
-        }
-
         Trip savedTrip = tripRepository.save(trip);
+
+        Budget budget = Budget.createBudget(savedTrip, Money.of(command.totalBudget()));
+        budgetRepository.save(budget);
+
+        savedTrip.setBudget(budget);
 
         return TripResponse.from(savedTrip);
     }
