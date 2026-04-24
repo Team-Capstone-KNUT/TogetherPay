@@ -58,6 +58,14 @@ public class Money {
         return new Money(this.amount.subtract(other.amount));
     }
 
+    public Money plus(Money other) {
+        return new Money(this.amount.add(other.getAmount()));
+    }
+
+    public Money minus(Money other) {
+        return new Money(this.amount.subtract(other.getAmount()));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

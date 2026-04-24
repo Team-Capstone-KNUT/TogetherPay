@@ -12,7 +12,7 @@ import lombok.Builder;
 @Builder
 public record UpdateExpenseCommand(
     Boolean isDutchPay,
-    Long teamId,
+    Long tripId,
     String title,
     String description,
     Currency currency,
