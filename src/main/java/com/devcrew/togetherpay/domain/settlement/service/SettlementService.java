@@ -10,6 +10,9 @@ import com.devcrew.togetherpay.domain.settlement.repository.SettlementRepository
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.team.TeamUser;
 import com.devcrew.togetherpay.domain.team.repository.TeamRepository;
+import com.devcrew.togetherpay.domain.team.repository.TeamUserRepository;
+import com.devcrew.togetherpay.domain.trip.Trip;
+import com.devcrew.togetherpay.domain.trip.repository.TripRepository;
 import com.devcrew.togetherpay.domain.user.User;
 import com.devcrew.togetherpay.domain.user.repository.UserRepository;
 import com.devcrew.togetherpay.global.error.ErrorCode;
@@ -25,7 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class SettlementService {
 
   private final UserRepository userRepository;
-  private final TeamRepository teamRepository;
+  private final TripRepository tripRepository;
+  private final TeamUserRepository teamUserRepository;
   private final ExpenseRepository expenseRepository;
   private final SettlementRepository settlementRepository;
 
@@ -40,10 +44,13 @@ public class SettlementService {
     Expense expense = getExpense(expenseId);
 
     // 지출 결제자
-    Participant participant = getPayer(expense);
+    Participant payerParticipant = getPayer(expense);
 
     // 결제자 검증
-    validateUser(userId, participant);
+    validateUser(userId, payerParticipant);
+
+    // 돈 받을 사람(결제자) 유저 객체 가져오기
+    User receiverUser = payerParticipant.getUser();
 
     // 정산자 모두 (결제자 빼고)
     List<Participant> participants = expense.getParticipants().stream()
@@ -51,9 +58,12 @@ public class SettlementService {
         .toList();
 
     List<Settlement> settlements = participants.stream()
-        .map(p -> {
-          return Settlement.of(p.getKrwAmount(), expense, p.getUser());
-        }).toList();
+            .map(p -> {
+              // Integer -> Long으로 변경해서 타입캐스팅
+              Long amount = p.getKrwAmount() != null ? p.getKrwAmount().longValue() : 0L;
+              User senderUser = p.getUser(); // 돈 보낼 사람(정산 참여자)
+              return Settlement.of(amount, expense, senderUser, receiverUser); // 송금자랑 수취자로 분리
+            }).toList();
 
     expense.addSettlements(settlements);
 
@@ -71,28 +81,30 @@ public class SettlementService {
   public FindDetailSettlementResponse getSettlement(Long userId, Long settlementId) {
     User user = getUser(userId);
 
-    Settlement settlement = settlementRepository.findByIdAndUser_Id(settlementId, userId)
+    Settlement settlement = settlementRepository.findByIdAndParticipant(settlementId, userId)
             .orElseThrow(() -> new BusinessException(ErrorCode.SETTLEMENT_NOT_FOUND));
 
-    return FindDetailSettlementResponse.of(settlement, user.getNickname());
+    return FindDetailSettlementResponse.of(settlement, userId);
   }
 
   /**
    * @param userId
-   * @param teamId
+   * @param tripId
    * @return FindSettlementsResponse
-   * 팀 정산 목록 조회 [팀 멤버]
+   * 특정 여행의 정산 목록 조회
    */
   @Transactional(readOnly = true)
-  public FindSettlementsResponse getTeamSettlements(Long userId, Long teamId) {
+  public FindSettlementsResponse getTripSettlements(Long userId, Long tripId) {
+    // 여행 조회
+    Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.TRIP_NOT_FOUND)); // 에러코드 필요
+
     // 팀 멤버 검증
-    Team team = getTeam(teamId);
+    validateUserIsTeamMember(userId, trip.getTeam());
 
-    validateTeamMember(userId, team.getTeamUsers());
+    List<Settlement> settlements = settlementRepository.findByTripId(tripId);
 
-    List<Settlement> settlements = settlementRepository.findByExpense_Team_Id(teamId);
-
-    return FindSettlementsResponse.of(settlements);
+    return FindSettlementsResponse.of(settlements, userId);
   }
 
   /**
@@ -103,8 +115,8 @@ public class SettlementService {
    */
   @Transactional(readOnly = true)
   public FindSettlementsResponse getMySettlements(Long userId) {
-    List<Settlement> settlements = settlementRepository.findByUser_Id(userId);
-    return FindSettlementsResponse.of(settlements);
+    List<Settlement> settlements = settlementRepository.findAllByParticipant(userId);
+    return FindSettlementsResponse.of(settlements, userId);
   }
 
   /**
@@ -125,9 +137,9 @@ public class SettlementService {
     validateUser(userId, participant);
 
     List<Settlement> settlements =
-        settlementRepository.findByExpense_Id(expenseId);
+        settlementRepository.findByExpenseId(expenseId);
 
-    return FindSettlementsResponse.of(settlements);
+    return FindSettlementsResponse.of(settlements, userId);
   }
 
   private Participant getPayer(Expense expense) {
@@ -154,16 +166,9 @@ public class SettlementService {
     return user;
   }
 
-  private Team getTeam(Long teamId) {
-    Team team = teamRepository.findById(teamId)
-        .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
-    return team;
-  }
-
-  private void validateTeamMember(Long userId, List<TeamUser> teamUsers) {
-    boolean isMember = teamUsers.stream()
-        .anyMatch(tu -> tu.getUser().getId().equals(userId));
-    if (!isMember) {
+  private void validateUserIsTeamMember(Long userId, Team team) {
+    User user = getUser(userId);
+    if (!teamUserRepository.existsByTeamAndUser(team, user)) {
       throw new BusinessException(ErrorCode.NOT_A_TEAM_USER);
     }
   }

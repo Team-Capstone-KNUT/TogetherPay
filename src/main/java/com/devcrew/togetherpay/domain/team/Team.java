@@ -37,9 +37,6 @@ public class Team extends BaseTimeEntity {
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamUser> teamUsers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Expense> expenses = new ArrayList<>();
-
     // 팩토리 메서드로만 생성하도록 제한(빌더에 액세스 레벨 PRIVATE로 해서 외부에서 호출하는거 제한)
     @Builder(access = AccessLevel.PRIVATE)
     private Team(String name, String password) {

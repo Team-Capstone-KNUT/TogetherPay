@@ -29,7 +29,7 @@ public class TeamController {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody CreateTeamRequest request) {
         // 팀 비즈니스 로직에서 생성 메서드 호출하고 파라미터로 userId, 받은 request 안에 들어있는 name, password를 넘겨준다.
-        Team team = teamService.createTeam(userId, request.name(), request.password());
+        Team team = teamService.createTeam(userId, request.name(), request.password(), request.memberIds());
         // 응답값 response from 메서드 호출해서 자동 변환
         TeamResponse response = TeamResponse.from(team);
         // response에 http 상태값도 같이 body에 담아서 전달
@@ -99,7 +99,7 @@ public class TeamController {
     }
 
     /**
-     * 특정 팀 조회
+     * 특정 팀 상세 조회
      * @param userId
      * @param teamId
      * @return

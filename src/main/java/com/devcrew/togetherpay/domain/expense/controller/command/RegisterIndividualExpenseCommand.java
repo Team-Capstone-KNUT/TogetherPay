@@ -6,6 +6,7 @@ import com.devcrew.togetherpay.domain.expense.Expense;
 import com.devcrew.togetherpay.domain.expense.PaymentMethod;
 import com.devcrew.togetherpay.domain.expense.dto.ParticipantInfo;
 import com.devcrew.togetherpay.domain.team.Team;
+import com.devcrew.togetherpay.domain.trip.Trip;
 import com.devcrew.togetherpay.global.common.vo.Money;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,7 +16,7 @@ import lombok.Builder;
 @Builder
 public record RegisterIndividualExpenseCommand(
 
-    Long teamId,
+    Long tripId,
     String title,
     String description,
     Currency currency,
@@ -26,7 +27,7 @@ public record RegisterIndividualExpenseCommand(
 
 ) {
 
-  public Expense toEntity(Team team, BigDecimal totalAmount, BigDecimal exchangeRate) {
+  public Expense toEntity(Trip trip, BigDecimal totalAmount, BigDecimal exchangeRate) {
     return Expense.builder()
         .title(title)
         .description(description)
@@ -36,7 +37,7 @@ public record RegisterIndividualExpenseCommand(
         .paymentMethod(method)
         .totalAmount(Money.of(totalAmount))
         .exchangeRate(Money.of(exchangeRate))
-        .team(team)
+        .trip(trip)
         .build();
   }
 

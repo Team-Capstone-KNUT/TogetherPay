@@ -29,24 +29,43 @@ public class TeamService {
 
     /**
      * 팀 생성 비즈니스 로직
-     * @param userId
+     * @param leaderId
      * @param name
      * @param password
      * @return
      */
     @Transactional
-    public Team createTeam(Long userId, String name, String password) {
+    public Team createTeam(Long leaderId, String name, String password, List<Long> memberIds) {
         // 유저 검증 메서드 호출
-        User user = getUserOrThrow(userId);
-        // 같은 유저는 같은 이름의 팀을 생성할 수 없다.
-        if (teamUserRepository.existsByUserAndTeam_Name(user, name)) {
-            log.warn("팀 생성 중복 시도. userId: {}, teamName: {}", userId, name);
+        User leader = getUserOrThrow(leaderId);
+
+        // 개인 단위의 팀 이름 중복 검사, 같은 유저가 중복되는 이름의 팀을 생성할 수 없다.
+        if (teamUserRepository.existsByUserAndTeam_Name(leader, name)) {
             throw new BusinessException(ErrorCode.TEAM_NAME_ALREADY_EXISTS);
         }
+
         // 팀 생성 팩토리 메서드 호출(name, password)
         Team team = Team.createTeam(name, password);
         // 위에서 생성한 팀 객체와 유저 객체를 팩토리 메서드로 전달, role까지 묶어서 만들어줌
-        TeamUser.createLeader(team, user);
+        TeamUser.createLeader(team, leader);
+
+        // 추가 멤버 일괄 초대 로직
+        if (memberIds != null && !memberIds.isEmpty()) {
+
+            // 방장은 이미 추가되었으니 제외하고 조회함.
+            List<Long> filteredMemberIds = memberIds.stream()
+                    .filter(id -> !id.equals(leaderId))
+                    .toList();
+            List<User> invitees = userRepository.findAllById(filteredMemberIds);
+
+            // 요청한 ID 갯수와 실제 조회된 유저 수가 다른 경우 예외가 발생한다.
+            if (invitees.size() != filteredMemberIds.size()) {
+                throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            }
+
+            // 초대 유저들을 일반 멤버 권한으로 일괄 가입 처리
+            invitees.forEach(invitee -> TeamUser.createMember(team, invitee));
+        }
         return teamRepository.save(team);
     }
 
@@ -236,6 +255,6 @@ public class TeamService {
     // 팀 유저 검증 메서드(유저가 팀에 속해 있는지 여부 확인)
     private TeamUser getTeamUserOrThrow(Team team, User user) {
         return teamUserRepository.findByTeamAndUser(team, user)
-                .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_A_TEAM_LEADER));
     }
 }

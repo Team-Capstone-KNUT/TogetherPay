@@ -27,6 +27,12 @@ public class ExpenseController {
 
   private final ExpenseService expenseService;
 
+  /**
+   * 지출 등록(더치페이)
+   * @param userId
+   * @param request
+   * @return
+   */
   @PostMapping("/dutch")
   public ResponseEntity<Void> registerWithDutch(
       @AuthenticationPrincipal Long userId,
@@ -37,6 +43,12 @@ public class ExpenseController {
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
+  /**
+   * 개인 지출 등록
+   * @param userId
+   * @param request
+   * @return
+   */
   @PostMapping("/individual")
   public ResponseEntity<Void> registerWithIndividual(
       @AuthenticationPrincipal Long userId,
@@ -46,6 +58,12 @@ public class ExpenseController {
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
+  /**
+   * 특정 지출 조회
+   * @param userId
+   * @param expenseId
+   * @return
+   */
   @GetMapping("/{expenseId}")
   public ResponseEntity<FindDetailExpenseResponse> getExpense(
       @AuthenticationPrincipal Long userId,
@@ -55,15 +73,28 @@ public class ExpenseController {
     return ResponseEntity.ok(response);
   }
 
-  @GetMapping("/team/{teamId}")
+  /**
+   * 여행 단위의 지출 전체 조회
+   * @param userId
+   * @param tripId
+   * @return
+   */
+  @GetMapping("/trip/{tripId}")
   public ResponseEntity<FindExpensesResponse> getExpenses(
       @AuthenticationPrincipal Long userId,
-      @PathVariable Long teamId
+      @PathVariable Long tripId
   ) {
-    FindExpensesResponse response = expenseService.getExpenses(userId, teamId);
+    FindExpensesResponse response = expenseService.getExpenses(userId, tripId);
     return ResponseEntity.ok(response);
   }
 
+  /**
+   * 지출 수정
+   * @param userId
+   * @param expenseId
+   * @param request
+   * @return
+   */
   @PatchMapping("/{expenseId}")
   public ResponseEntity<Void> update(
       @AuthenticationPrincipal Long userId,
@@ -74,6 +105,12 @@ public class ExpenseController {
     return ResponseEntity.noContent().build();
   }
 
+  /**
+   * 지출 삭제
+   * @param userId
+   * @param expenseId
+   * @return
+   */
   @DeleteMapping("/{expenseId}")
   public ResponseEntity<Void> delete(
       @AuthenticationPrincipal Long userId,
