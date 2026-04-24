@@ -6,6 +6,7 @@ import com.devcrew.togetherpay.domain.user.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -15,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByProviderAndProviderId(Provider provider, String providerId);
     // 상태값과 수정(탈퇴)시간 기준으로 삭제(탈퇴 시 개인정보 삭제)
     void deleteByStatusAndUpdatedAtBefore(UserStatus status, LocalDateTime threshold);
+    // 닉네임에 검색어가 포함된 유저를 최대 10명만 가져오기
+    List<User> findTop10ByNicknameContaining(String nickname);
 }

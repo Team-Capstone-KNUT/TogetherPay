@@ -2,6 +2,7 @@ package com.devcrew.togetherpay.domain.user.service;
 
 import com.devcrew.togetherpay.domain.user.User;
 import com.devcrew.togetherpay.domain.user.UserStatus;
+import com.devcrew.togetherpay.domain.user.dto.UserSearchResponse;
 import com.devcrew.togetherpay.domain.user.repository.UserRepository;
 import com.devcrew.togetherpay.global.error.ErrorCode;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;
@@ -9,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -50,6 +55,22 @@ public class UserService {
         // 상태를 WITHDRAWN으로 변경한다.
         user.withdraw();
         log.info("회원 탈퇴 처리 완료. userId: {}", userId);
+    }
+
+    /**
+     * 닉네임으로 유저 검색 로직
+     * @param nickname
+     * @return
+     */
+    public List<UserSearchResponse> searchUsers(String nickname) {
+        if (!StringUtils.hasText(nickname) || nickname.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return userRepository.findTop10ByNicknameContaining(nickname.trim())
+                .stream()
+                .map(UserSearchResponse::from)
+                .toList();
     }
 
     /**

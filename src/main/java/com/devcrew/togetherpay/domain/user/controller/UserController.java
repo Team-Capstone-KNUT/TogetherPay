@@ -2,6 +2,7 @@ package com.devcrew.togetherpay.domain.user.controller;
 
 import com.devcrew.togetherpay.domain.user.dto.UpdateNicknameRequest;
 import com.devcrew.togetherpay.domain.user.dto.UserProfileResponse;
+import com.devcrew.togetherpay.domain.user.dto.UserSearchResponse;
 import com.devcrew.togetherpay.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,11 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
     /**
@@ -47,4 +51,17 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 닉네임으로 유저 실시간 검색
+     * /api/v1/users/search?nickname=닉네임
+     * @param nickname
+     * @return
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<UserSearchResponse>> searchUsers(
+            @RequestParam(name = "nickname", required = false) String nickname
+    ) {
+        List<UserSearchResponse> responses = userService.searchUsers(nickname);
+        return ResponseEntity.ok(responses);
+    }
 }
