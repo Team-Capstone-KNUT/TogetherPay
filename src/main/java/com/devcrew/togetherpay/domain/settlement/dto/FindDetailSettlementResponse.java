@@ -7,20 +7,33 @@ import lombok.Builder;
 public record FindDetailSettlementResponse(
     Long settlementId,
     Long expenseId,
-    Long amount,
-    Boolean isSettled,
     String expenseTitle,
-    String nickname
+    String counterpartyNickname,
+    String myRole,
+    Long amount,
+    Boolean isSettled
 ) {
 
-  public static FindDetailSettlementResponse of(Settlement settlement, String nickname) {
+  public static FindDetailSettlementResponse of(Settlement settlement, Long myUserId) {
+
+    // 내가 Sender(돈을 보내는 사람)인지 확인
+    boolean isSender = settlement.getSender().getId().equals(myUserId);
+
+    // 닉네임 설정 부분, 내가 sender인 경우 상대방을 receiver로, 아니면 반대로 적용
+    String counterpartyName = isSender
+        ? settlement.getReceiver().getNickname()
+        : settlement.getSender().getNickname();
+
+    String role = isSender ? "SENDER" : "RECEIVER";
+
     return FindDetailSettlementResponse.builder()
-        .settlementId(settlement.getId())
-        .expenseId(settlement.getExpense().getId())
-        .amount(settlement.getAmount())
-        .isSettled(settlement.getIsSettled())
-        .expenseTitle(settlement.getExpense().getTitle())
-        .nickname(nickname)
-        .build();
+            .settlementId(settlement.getId())
+            .expenseId(settlement.getExpense().getId())
+            .expenseTitle(settlement.getExpense().getTitle())
+            .counterpartyNickname(counterpartyName)
+            .myRole(role)
+            .amount(settlement.getAmount())
+            .isSettled(settlement.getIsSettled())
+            .build();
   }
 }

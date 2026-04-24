@@ -37,14 +37,19 @@ public class Settlement {
   Expense expense;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id")
-  User user;
+  @JoinColumn(name = "sender_id")
+  private User sender; // 돈을 보내는 유저(정산 인원)
 
-  public static Settlement of(Long amount, Expense expense, User user) {
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "receiver_id")
+  private User receiver; // 돈을 받는 유저(결제자)
+
+  public static Settlement of(Long amount, Expense expense, User sender, User receiver) {
     return Settlement.builder()
         .amount(amount)
         .expense(expense)
-        .user(user)
+        .sender(sender)
+        .receiver(receiver)
         .build();
   }
 

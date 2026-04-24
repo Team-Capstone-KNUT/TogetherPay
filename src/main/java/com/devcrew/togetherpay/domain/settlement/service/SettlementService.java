@@ -44,10 +44,13 @@ public class SettlementService {
     Expense expense = getExpense(expenseId);
 
     // 지출 결제자
-    Participant participant = getPayer(expense);
+    Participant payerParticipant = getPayer(expense);
 
     // 결제자 검증
-    validateUser(userId, participant);
+    validateUser(userId, payerParticipant);
+
+    // 돈 받을 사람(결제자) 유저 객체 가져오기
+    User receiverUser = payerParticipant.getUser();
 
     // 정산자 모두 (결제자 빼고)
     List<Participant> participants = expense.getParticipants().stream()
@@ -58,7 +61,8 @@ public class SettlementService {
             .map(p -> {
               // Integer -> Long으로 변경해서 타입캐스팅
               Long amount = p.getKrwAmount() != null ? p.getKrwAmount().longValue() : 0L;
-              return Settlement.of(amount, expense, p.getUser());
+              User senderUser = p.getUser(); // 돈 보낼 사람(정산 참여자)
+              return Settlement.of(amount, expense, senderUser, receiverUser); // 송금자랑 수취자로 분리
             }).toList();
 
     expense.addSettlements(settlements);
@@ -77,10 +81,10 @@ public class SettlementService {
   public FindDetailSettlementResponse getSettlement(Long userId, Long settlementId) {
     User user = getUser(userId);
 
-    Settlement settlement = settlementRepository.findByIdAndUser_Id(settlementId, userId)
+    Settlement settlement = settlementRepository.findByIdAndParticipant(settlementId, userId)
             .orElseThrow(() -> new BusinessException(ErrorCode.SETTLEMENT_NOT_FOUND));
 
-    return FindDetailSettlementResponse.of(settlement, user.getNickname());
+    return FindDetailSettlementResponse.of(settlement, userId);
   }
 
   /**
@@ -98,9 +102,9 @@ public class SettlementService {
     // 팀 멤버 검증
     validateUserIsTeamMember(userId, trip.getTeam());
 
-    List<Settlement> settlements = settlementRepository.findByExpense_Trip_Id(tripId);
+    List<Settlement> settlements = settlementRepository.findByTripId(tripId);
 
-    return FindSettlementsResponse.of(settlements);
+    return FindSettlementsResponse.of(settlements, userId);
   }
 
   /**
@@ -111,8 +115,8 @@ public class SettlementService {
    */
   @Transactional(readOnly = true)
   public FindSettlementsResponse getMySettlements(Long userId) {
-    List<Settlement> settlements = settlementRepository.findByUser_Id(userId);
-    return FindSettlementsResponse.of(settlements);
+    List<Settlement> settlements = settlementRepository.findAllByParticipant(userId);
+    return FindSettlementsResponse.of(settlements, userId);
   }
 
   /**
@@ -133,9 +137,9 @@ public class SettlementService {
     validateUser(userId, participant);
 
     List<Settlement> settlements =
-        settlementRepository.findByExpense_Id(expenseId);
+        settlementRepository.findByExpenseId(expenseId);
 
-    return FindSettlementsResponse.of(settlements);
+    return FindSettlementsResponse.of(settlements, userId);
   }
 
   private Participant getPayer(Expense expense) {
