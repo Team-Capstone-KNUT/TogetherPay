@@ -3,6 +3,7 @@ package com.devcrew.togetherpay.domain.team.service;
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.team.TeamRole;
 import com.devcrew.togetherpay.domain.team.TeamUser;
+import com.devcrew.togetherpay.domain.team.dto.FindTeamsResponse;
 import com.devcrew.togetherpay.domain.team.dto.MemberResponse;
 import com.devcrew.togetherpay.domain.team.dto.TeamDetailResponse;
 import com.devcrew.togetherpay.domain.team.dto.TeamSimpleResponse;
@@ -12,6 +13,8 @@ import com.devcrew.togetherpay.domain.user.User;
 import com.devcrew.togetherpay.domain.user.repository.UserRepository;
 import com.devcrew.togetherpay.global.error.ErrorCode;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final TeamUserRepository teamUserRepository;
+    @PersistenceContext private EntityManager em;
 
     /**
      * 팀 생성 비즈니스 로직
@@ -66,7 +70,18 @@ public class TeamService {
             // 초대 유저들을 일반 멤버 권한으로 일괄 가입 처리
             invitees.forEach(invitee -> TeamUser.createMember(team, invitee));
         }
-        return teamRepository.save(team);
+        Team savedTeam = teamRepository.save(team);
+
+        /**
+         * 영속성 컨텍스트 동기화
+         * flush()로 INSERT 쿼리를 DB에 즉시 날리고, clear()로 1차 캐시를 비운다.
+         * 이렇게 해야 이후 조회 시 DB에서 '진짜' 저장된 데이터(Team + TeamUsers)를 읽어올 수 있음.
+         */
+        em.flush();
+        em.clear();
+
+        return teamRepository.findById(savedTeam.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
     }
 
     /**
@@ -140,17 +155,13 @@ public class TeamService {
      * @return
      */
     @Transactional(readOnly = true)
-    public List<TeamSimpleResponse> getMyTeams(Long userId) {
+    public FindTeamsResponse getMyTeams(Long userId) {
 
-        List<TeamUser> myTeamUsers = teamUserRepository.findAllByUserIdWithTeam(userId);
+        // 팀 전체 조회(내가 속한 팀 기준으로 그 팀의 모든 유저 한번에 조회)
+        List<Team> myTeams = teamRepository.findAllByUserIdWithUsers(userId);
 
-        return myTeamUsers.stream()
-                .map(tu -> TeamSimpleResponse.builder()
-                        .teamId(tu.getTeam().getId())
-                        .name(tu.getTeam().getName())
-                        .myrole(tu.getRole())
-                        .build()
-                ).toList();
+        // DTO 변환시 userId도 함께 넘겨줌
+        return FindTeamsResponse.of(myTeams, userId);
     }
 
     /**
