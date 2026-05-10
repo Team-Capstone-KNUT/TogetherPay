@@ -138,7 +138,7 @@ public class ExpenseService {
 
     validateUserIsTeamMember(userId, team);
 
-    List<Expense> expenses = expenseRepository.findByTrip_Id(tripId);
+    List<Expense> expenses = expenseRepository.findAllByTripIdWithParticipants(tripId);
 
     return FindExpensesResponse.from(expenses);
   }
@@ -281,7 +281,7 @@ public class ExpenseService {
 
     expense.updateInfo(command.title(), command.description(),
             command.currency(), command.category(), command.expenseDate(), command.method(), command.totalAmount(), exchangeRate);
-
+    expense.markAsDutchPay();
     BigDecimal baseAmount = divAndRem[0];
     BigDecimal remainder = divAndRem[1];
 
@@ -301,7 +301,7 @@ public class ExpenseService {
 
     expense.updateInfo(command.title(), command.description(),
             command.currency(), command.category(), command.expenseDate(), command.method(), totalAmount, exchangeRate);
-
+    expense.markAsIndividualPay();
     assignParticipants(expense, command.participantInfos(), ParticipantInfo::amount);
   }
 }
