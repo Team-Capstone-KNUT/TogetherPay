@@ -36,6 +36,7 @@ public record RegisterDutchExpenseCommand(
         .totalAmount(Money.of(totalAmount))
         .exchangeRate(Money.of(exchangeRate))
         .trip(trip)
+        .isDutchPay(true)
         .build();
   }
 }

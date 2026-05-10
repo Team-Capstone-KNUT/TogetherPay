@@ -38,6 +38,7 @@ public record RegisterIndividualExpenseCommand(
         .totalAmount(Money.of(totalAmount))
         .exchangeRate(Money.of(exchangeRate))
         .trip(trip)
+        .isDutchPay(false)
         .build();
   }
 
