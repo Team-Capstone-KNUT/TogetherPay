@@ -29,21 +29,39 @@ public class ExchangeRateService {
    * 환율 정보 조회
    */
   private FindExchangeRateResponse searchExchange(Currency currency, LocalDate expenseDate) {
+    // 데이터가 없는 날짜(주말 등)를 대비해 재귀적 Fallback 로직 호출
+    return searchWithFallback(currency, expenseDate, 0);
+  }
+
+  /**
+   * 데이터가 없을 경우 최대 7일 전까지 역추적하여 환율 조회
+   */
+  private FindExchangeRateResponse searchWithFallback(Currency currency, LocalDate date, int depth) {
+    // 일주일 넘게 데이터가 없다면 API 키나 시스템 문제로 판단하고 중단
+    if (depth > 7) {
+      return null;
+    }
 
     // 패턴 설정
-    String searchDate = expenseDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    String searchDate = date.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-    return webClient.get()
-        .uri(uriBuilder -> uriBuilder
-            .queryParam("authkey", authkey)
-            .queryParam("searchdate", searchDate)
-            .queryParam("data", "AP01")
-            .build())
-        .retrieve()
-        .bodyToFlux(FindExchangeRateResponse.class)
-        .filter(response -> response.curUnit().contains(currency.name()))
-        .blockFirst();
+    FindExchangeRateResponse response = webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                    .queryParam("authkey", authkey)
+                    .queryParam("searchdate", searchDate)
+                    .queryParam("data", "AP01")
+                    .build())
+            .retrieve()
+            .bodyToFlux(FindExchangeRateResponse.class)
+            .filter(res -> res.curUnit().contains(currency.name()))
+            .blockFirst();
 
+    // ⭐️ 결과가 없으면 하루 전(minusDays(1)) 날짜로 다시 시도
+    if (response == null) {
+      return searchWithFallback(currency, date.minusDays(1), depth + 1);
+    }
+
+    return response;
   }
 
   /**
@@ -72,4 +90,3 @@ public class ExchangeRateService {
   }
 
 }
-
