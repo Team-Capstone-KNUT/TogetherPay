@@ -140,6 +140,15 @@ public class Expense extends BaseTimeEntity {
     this.krwTotalAmount = result.toWons();
   }
 
+  // Expense.java 엔티티 내부
+  public Long payerId() {
+    return this.participants.stream()
+            .filter(Participant::isPayer) // 결제자인 참여자 필터링
+            .map(p -> p.getUser().getId()) // 유저 ID 추출
+            .findFirst() // 첫 번째 결과 반환
+            .orElse(null); // 혹시 없을 경우를 대비해 null 처리 (로직상 반드시 있어야 함)
+  }
+
   public List<ParticipantResponse> participantsToResponse() {
     return participants.stream()
         .map(p -> {
