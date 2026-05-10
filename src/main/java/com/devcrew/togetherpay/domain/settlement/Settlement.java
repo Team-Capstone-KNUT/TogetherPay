@@ -2,6 +2,8 @@ package com.devcrew.togetherpay.domain.settlement;
 
 import com.devcrew.togetherpay.domain.expense.Expense;
 import com.devcrew.togetherpay.domain.user.User;
+import com.devcrew.togetherpay.global.error.ErrorCode;
+import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -43,6 +45,17 @@ public class Settlement {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "receiver_id")
   private User receiver; // 돈을 받는 유저(결제자)
+
+  @Column(nullable = false)
+  private boolean isTransferred = false; // 기본값은 false (미송금)
+
+  // 송금 완료 상태 변경 로직
+  public void completeTransfer() {
+    if (this.isTransferred) {
+      throw new BusinessException(ErrorCode.ALREADY_TRANSFERRED);
+    }
+    this.isTransferred = true;
+  }
 
   public static Settlement of(Long amount, Expense expense, User sender, User receiver) {
     return Settlement.builder()
