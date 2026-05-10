@@ -53,6 +53,9 @@ public class Expense extends BaseTimeEntity {
   @Column(nullable = false)
   private LocalDate expenseDate;
 
+  @Column(nullable = false)
+  private boolean isDutchPay; // 더치페이 여부 저장
+
   @Embedded
   @AttributeOverrides({
       @AttributeOverride(name = "amount",
@@ -114,6 +117,16 @@ public class Expense extends BaseTimeEntity {
 
   public void addSettlements(List<Settlement> settlements) {
     this.settlements.addAll(settlements);
+  }
+
+  // 더치 페이
+  public void markAsDutchPay() {
+    this.isDutchPay = true;
+  }
+
+  // 개인 결제
+  public void markAsIndividualPay() {
+    this.isDutchPay = false;
   }
 
   // 전체 금액 * 환율 = 전체 금액(KRW) 지정.
