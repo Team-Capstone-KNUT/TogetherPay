@@ -1,6 +1,7 @@
 package com.devcrew.togetherpay.domain.team;
 
 import com.devcrew.togetherpay.domain.expense.Expense;
+import com.devcrew.togetherpay.domain.trip.Trip;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import com.devcrew.togetherpay.global.error.ErrorCode;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;
@@ -33,7 +34,9 @@ public class Team extends BaseTimeEntity {
     @Column(nullable = false)
     private String password; // 팀 패스워드
 
-    // 양방향 매핑으로, 팀이 삭제되면 속한 팀원 정보(TeamUser)도 함께 날아가도록 Cascade 설정
+    @OneToMany(mappedBy = "team", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Trip> trips = new ArrayList<>();
+
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamUser> teamUsers = new ArrayList<>();
 
@@ -67,7 +70,12 @@ public class Team extends BaseTimeEntity {
 
     // 연관관계 편의 메서드
     public void addTeamUser(TeamUser teamUser) {
-        this.teamUsers.add(teamUser);
+        if (this.teamUsers == null) {
+            this.teamUsers = new ArrayList<>();
+        }
+        if (!this.teamUsers.contains(teamUser)) {
+            this.teamUsers.add(teamUser);
+        }
     }
 
     // 팀 이름 수정 메서드
