@@ -21,24 +21,25 @@ public record FindDetailExpenseResponse(
     Category category,
     LocalDate expenseDate,
     PaymentMethod paymentMethod,
-    List<ParticipantResponse> participantResponses
+    List<ParticipantResponse> participantResponses,
+    boolean isDutchPay
 
 ) {
 
   public static FindDetailExpenseResponse from(Expense expense) {
     return FindDetailExpenseResponse.builder()
-        .expenseId(expense.getId())
-        .title(expense.getTitle())
-        .description(expense.getDescription())
-        .totalAmount(expense.getTotalAmount())
-        .krwTotalAmount(expense.getKrwTotalAmount())
-        .currency(expense.getCurrency())
-        .category(expense.getCategory())
-        .expenseDate(expense.getExpenseDate())
-        .paymentMethod(expense.getPaymentMethod())
-        .participantResponses(expense.participantsToResponse())
-        .build();
-
+            .expenseId(expense.getId())
+            .title(expense.getTitle())
+            .description(expense.getDescription())
+            .totalAmount(expense.getTotalAmount())
+            .krwTotalAmount(expense.getKrwTotalAmount())
+            .currency(expense.getCurrency())
+            .category(expense.getCategory())
+            .expenseDate(expense.getExpenseDate())
+            .paymentMethod(expense.getPaymentMethod())
+            .participantResponses(expense.participantsToResponse())
+            .isDutchPay(expense.isDutchPay())
+            .build();
   }
 
 }

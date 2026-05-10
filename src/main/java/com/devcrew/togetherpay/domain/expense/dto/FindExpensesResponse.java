@@ -17,14 +17,15 @@ public record FindExpensesResponse(
     List<FindExpenseResponse> responses = expenses.stream()
         .map(expense -> {
           return FindExpenseResponse.builder()
-              .expenseId(expense.getId())
-              .title(expense.getTitle())
-              .currency(expense.getCurrency())
-              .totalAmount(expense.getTotalAmount())
-              .krwTotalAmount(expense.getKrwTotalAmount())
-              .category(expense.getCategory())
-              .expenseDate(expense.getExpenseDate())
-              .build();
+                  .expenseId(expense.getId())
+                  .title(expense.getTitle())
+                  .currency(expense.getCurrency())
+                  .totalAmount(expense.getTotalAmount())
+                  .krwTotalAmount(expense.getKrwTotalAmount())
+                  .category(expense.getCategory())
+                  .expenseDate(expense.getExpenseDate())
+                  .isDutchPay(expense.isDutchPay())
+                  .build();
         }).toList();
 
     return FindExpensesResponse.builder()
@@ -40,7 +41,8 @@ public record FindExpensesResponse(
       BigDecimal totalAmount,
       Integer krwTotalAmount,
       Category category,
-      LocalDate expenseDate
+      LocalDate expenseDate,
+      boolean isDutchPay
   ) {}
 
 }
