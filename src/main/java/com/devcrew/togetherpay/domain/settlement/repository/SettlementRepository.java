@@ -39,4 +39,6 @@ public interface SettlementRepository extends JpaRepository<Settlement, Long> {
           "JOIN FETCH s.receiver " +
           "WHERE s.expense.trip.id = :tripId")
   List<Settlement> findByTripId(@Param("tripId") Long tripId);
+
+  boolean existsByExpenseId(Long expenseId);
 }
