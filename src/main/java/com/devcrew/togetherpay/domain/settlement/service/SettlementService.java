@@ -43,6 +43,10 @@ public class SettlementService {
 
     Expense expense = getExpense(expenseId);
 
+    if (settlementRepository.existsByExpenseId(expenseId)) {
+      throw new BusinessException(ErrorCode.ALREADY_SETTLED);
+    }
+
     // 지출 결제자
     Participant payerParticipant = getPayer(expense);
 
@@ -68,6 +72,22 @@ public class SettlementService {
     expense.addSettlements(settlements);
 
     settlementRepository.saveAll(settlements);
+  }
+
+  /**
+   * 송금 상태 변경 (보낸 사람이 확인)
+   */
+  public void updateTransferStatus(Long userId, Long settlementId) {
+    Settlement settlement = settlementRepository.findById(settlementId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.SETTLEMENT_NOT_FOUND));
+
+    // 오직 돈을 보내야 하는 사람(Sender)만 이 상태를 바꿀 수 있어야 함
+    if (!settlement.getSender().getId().equals(userId)) {
+      throw new BusinessException(ErrorCode.NOT_MATCH_USER);
+    }
+
+    // Settlement 엔티티에 정의된 상태 변경 메서드 호출
+    settlement.completeTransfer();
   }
 
   /**
