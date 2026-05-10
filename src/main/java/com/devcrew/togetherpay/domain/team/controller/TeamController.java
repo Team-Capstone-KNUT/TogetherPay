@@ -87,14 +87,15 @@ public class TeamController {
     }
 
     /**
-     * 팀 단순 조회
+     * 내 팀 목록 전체 조회
      * @param userId
-     * @return
+     * @return FindTeamsResponse (팀 정보, 내 역할, 속한 유저 목록 포함)
      */
     @GetMapping
-    public ResponseEntity<List<TeamSimpleResponse>> getMyTeams(
-            @AuthenticationPrincipal Long userId) {
-        List<TeamSimpleResponse> response = teamService.getMyTeams(userId);
+    public ResponseEntity<FindTeamsResponse> getMyTeams(
+            @AuthenticationPrincipal Long userId
+    ) {
+        FindTeamsResponse response = teamService.getMyTeams(userId);
         return ResponseEntity.ok(response);
     }
 
