@@ -64,6 +64,7 @@ public class ExpenseService {
     BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
 
     Expense expense = command.toEntity(trip, command.totalAmount(), exchangeRate);
+    expense.markAsDutchPay();
     expense.calculateKRW();
 
     BigDecimal baseAmount = divAndRem[0]; // 몫
@@ -102,6 +103,7 @@ public class ExpenseService {
     BigDecimal exchangeRate = exchangeRateService.getExchangeRate(command.currency(), command.expenseDate());
 
     Expense expense = command.toEntity(trip, totalAmount, exchangeRate);
+    expense.markAsIndividualPay();
     expense.calculateKRW();
 
     assignParticipants(expense, participantInfos, ParticipantInfo::amount);
