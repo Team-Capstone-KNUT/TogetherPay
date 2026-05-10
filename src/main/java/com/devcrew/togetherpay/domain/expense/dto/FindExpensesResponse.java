@@ -25,6 +25,7 @@ public record FindExpensesResponse(
                   .category(expense.getCategory())
                   .expenseDate(expense.getExpenseDate())
                   .isDutchPay(expense.isDutchPay())
+                  .payerId(expense.payerId())
                   .build();
         }).toList();
 
@@ -42,7 +43,8 @@ public record FindExpensesResponse(
       Integer krwTotalAmount,
       Category category,
       LocalDate expenseDate,
-      boolean isDutchPay
+      boolean isDutchPay,
+      Long payerId
   ) {}
 
 }
