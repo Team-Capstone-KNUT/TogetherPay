@@ -30,10 +30,6 @@ public class Settlement {
   @Column(nullable = false)
   private Long amount;
 
-  @Builder.Default
-  @Column(nullable = false)
-  Boolean isSettled = false; // 정산 완료 여부
-
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "expense_id")
   Expense expense;
@@ -58,12 +54,18 @@ public class Settlement {
   }
 
   public static Settlement of(Long amount, Expense expense, User sender, User receiver) {
-    return Settlement.builder()
+    Settlement settlement = Settlement.builder()
         .amount(amount)
         .expense(expense)
         .sender(sender)
         .receiver(receiver)
         .build();
+
+    if (expense != null) {
+      expense.getSettlements().add(settlement);
+    }
+
+    return settlement;
   }
 
 }

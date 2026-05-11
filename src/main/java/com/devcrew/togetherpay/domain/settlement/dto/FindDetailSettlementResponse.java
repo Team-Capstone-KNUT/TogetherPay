@@ -5,24 +5,23 @@ import lombok.Builder;
 
 @Builder
 public record FindDetailSettlementResponse(
-    Long settlementId,
-    Long expenseId,
-    String expenseTitle,
-    String counterpartyNickname,
-    String myRole,
-    Long amount,
-    Boolean isSettled
+        Long settlementId,
+        Long expenseId,
+        String expenseTitle,
+        String counterpartyNickname,
+        String myRole,
+        Long amount,
+        boolean isTransferred,
+        boolean isSettled
 ) {
 
   public static FindDetailSettlementResponse of(Settlement settlement, Long myUserId) {
 
-    // 내가 Sender(돈을 보내는 사람)인지 확인
     boolean isSender = settlement.getSender().getId().equals(myUserId);
 
-    // 닉네임 설정 부분, 내가 sender인 경우 상대방을 receiver로, 아니면 반대로 적용
     String counterpartyName = isSender
-        ? settlement.getReceiver().getNickname()
-        : settlement.getSender().getNickname();
+            ? settlement.getReceiver().getNickname()
+            : settlement.getSender().getNickname();
 
     String role = isSender ? "SENDER" : "RECEIVER";
 
@@ -33,7 +32,8 @@ public record FindDetailSettlementResponse(
             .counterpartyNickname(counterpartyName)
             .myRole(role)
             .amount(settlement.getAmount())
-            .isSettled(settlement.getIsSettled())
+            .isTransferred(settlement.isTransferred())
+            .isSettled(settlement.getExpense().isSettled())
             .build();
   }
 }

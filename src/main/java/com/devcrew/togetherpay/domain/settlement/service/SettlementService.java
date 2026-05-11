@@ -18,6 +18,9 @@ import com.devcrew.togetherpay.domain.user.repository.UserRepository;
 import com.devcrew.togetherpay.global.error.ErrorCode;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import java.util.List;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,7 @@ public class SettlementService {
   private final TeamUserRepository teamUserRepository;
   private final ExpenseRepository expenseRepository;
   private final SettlementRepository settlementRepository;
+  @PersistenceContext private EntityManager em;
 
   /**
    *
@@ -78,16 +82,25 @@ public class SettlementService {
    * 송금 상태 변경 (보낸 사람이 확인)
    */
   public void updateTransferStatus(Long userId, Long settlementId) {
+
     Settlement settlement = settlementRepository.findById(settlementId)
             .orElseThrow(() -> new BusinessException(ErrorCode.SETTLEMENT_NOT_FOUND));
 
-    // 오직 돈을 보내야 하는 사람(Sender)만 이 상태를 바꿀 수 있어야 함
+    // 송금자 본인인지 권한 검증
     if (!settlement.getSender().getId().equals(userId)) {
       throw new BusinessException(ErrorCode.NOT_MATCH_USER);
     }
 
-    // Settlement 엔티티에 정의된 상태 변경 메서드 호출
     settlement.completeTransfer();
+
+    Expense expense = settlement.getExpense();
+
+    boolean isAllFinished = expense.getSettlements().stream()
+            .allMatch(Settlement::isTransferred);
+
+    if (isAllFinished) {
+      expense.completeSettlement(); // isSettled = true
+    }
   }
 
   /**

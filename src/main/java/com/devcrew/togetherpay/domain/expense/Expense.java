@@ -85,6 +85,12 @@ public class Expense extends BaseTimeEntity {
   @Enumerated(EnumType.STRING)
   private PaymentMethod paymentMethod;
 
+  private boolean isSettled = false; // 정산 여부(기본값 false)
+
+  public void completeSettlement() {
+    this.isSettled = true;
+  }
+
   // 연관관계 추가(Trip)
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "trip_id")
