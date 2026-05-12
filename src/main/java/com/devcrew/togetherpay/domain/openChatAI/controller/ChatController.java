@@ -2,9 +2,10 @@ package com.devcrew.togetherpay.domain.openChatAI.controller;
 
 import com.devcrew.togetherpay.domain.openChatAI.dto.request.ChatRequest;
 import com.devcrew.togetherpay.domain.openChatAI.service.ChatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,10 +19,11 @@ public class ChatController {
   private final ChatService chatService;
 
   @PostMapping("/chat")
-  public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
+  public ResponseEntity<String> chat(
+          @AuthenticationPrincipal Long userId,
+          @Valid @RequestBody ChatRequest request) {
 
-    return ResponseEntity.ok(chatService.chat(request));
-
+    return ResponseEntity.ok(chatService.chat(userId, request));
   }
 
 
