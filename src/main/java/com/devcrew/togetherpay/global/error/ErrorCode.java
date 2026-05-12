@@ -65,8 +65,15 @@ public enum ErrorCode {
     SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "존재하지 않는 정산입니다."),
     PAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "S002", "결제자를 찾을 수 없습니다."),
     ALREADY_SETTLED(HttpStatus.CONFLICT, "S003", "이미 정산 요청이 완료된 지출 내역입니다."),
-    ALREADY_TRANSFERRED(HttpStatus.CONFLICT, "S004", "이미 송금이 완료된 내역입니다.");
+    ALREADY_TRANSFERRED(HttpStatus.CONFLICT, "S004", "이미 송금이 완료된 내역입니다."),
     // (S003 NOT_MATCH_USER 는 공통 권한 에러 R003 으로 통합되었습니다.)
+
+    // ==========================================
+    // 9. 일정 (schedule)
+    SCHEDULE_ALREADY_EXISTS(HttpStatus.CONFLICT, "SC001", "해당 날짜에는 이미 일정이 생성되어 있습니다."),
+    SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SC002", "존재하지 않는 일정입니다."),
+    SCHEDULE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "SC003", "존재하지 않는 일정입니다.");
+    // ==========================================
 
     private final HttpStatus status;
     private final String code;
