@@ -49,7 +49,7 @@ public class ScheduleService {
 
         isDuplicateSchedule(trip);
 
-        Schedule schedule = command.toEntity(trip, team);
+        Schedule schedule = command.toEntity(trip);
 
         schedule.splitSchedule();
 
