@@ -32,4 +32,14 @@ public class ScheduleItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id")
     private Schedule schedule;
+
+    public void update(String title, String description) {
+        this.title = title;
+        this.description = description;
+    }
+
+    public void delete() {
+        this.title = null;
+        this.description = null;
+    }
 }
