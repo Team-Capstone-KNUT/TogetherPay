@@ -15,32 +15,29 @@ public class ChatService {
 
     String question = request.question();
 
-    if(isTravelScheduleSummary(question)) {
+    if (isTravelScheduleSummary(question)) {
       // 여행 일정 조회
 
       // 여행 일정을 포맷하기. (StringBuilder)
       StringBuilder sb = new StringBuilder();
 
-
-
       // 일정 넘기기.
+//      return chatClient.prompt()
+//              .user() // 일정 삽입.
+//              .call()
+//              .content();
+    }
+
+      // 옵션 값은 ChatConfig에서 설정함.
       return chatClient.prompt()
-              .user() // 일정 삽입.
+              .user(request.question())
               .call()
               .content();
     }
 
-    // 옵션 값은 ChatConfig에서 설정함.
-    return chatClient.prompt()
-        .user(request.question())
-        .call()
-        .content();
-
-  }
-
   // 여행 일정 요약 질문 판단하기.
   // 특정 키워드가 있으면 호출.
-  private static boolean isTravelScheduleSummary(String question) {
+  private boolean isTravelScheduleSummary(String question) {
     boolean hasMyKeyword =
             question.contains("내")
             || question.contains("나의")
