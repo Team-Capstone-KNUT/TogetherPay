@@ -3,6 +3,7 @@ package com.devcrew.togetherpay.domain.trip;
 import com.devcrew.togetherpay.domain.budget.Budget;
 import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.domain.expense.Expense;
+import com.devcrew.togetherpay.domain.schedule.Schedule;
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.global.common.BaseTimeEntity;
 import com.devcrew.togetherpay.global.error.ErrorCode;
@@ -47,6 +48,9 @@ public class Trip extends BaseTimeEntity {
     @Builder.Default
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Expense> expenses = new ArrayList<>();
+
+    @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Schedule schedules;
 
     // 연관관계 편의 메서드
     public void setBudget(Budget budget) {

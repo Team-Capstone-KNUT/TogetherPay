@@ -42,3 +42,6 @@ src/main/resources/application_oauth2.yaml
 
 ### Docker 설정 (개인 환경) ###
 docker-compose.yml
+
+### .env 파일 ###
+*.env

@@ -17,4 +17,10 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
             "JOIN FETCH tu.user " +
             "WHERE t.id IN (SELECT tu2.team.id FROM TeamUser tu2 WHERE tu2.user.id = :userId)")
     List<Team> findAllByUserIdWithUsers(@Param("userId") Long userId);
+
+    // 팀에 유저가 속하는지 검증 메서드
+    boolean existsByIdAndTeamUsers_userId(Long teamId, Long userId);
+
+    // 팀에 여행id가 속하는지 검증 메서드
+    boolean existsByIdAndTrips_Id(Long teamId, Long tripId);
 }
