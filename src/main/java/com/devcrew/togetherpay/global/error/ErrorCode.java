@@ -22,6 +22,7 @@ public enum ErrorCode {
     NOT_A_TEAM_LEADER(HttpStatus.FORBIDDEN, "R001", "방장만 접근 가능한 기능입니다."),
     NOT_A_TEAM_USER(HttpStatus.FORBIDDEN, "R002", "해당 팀에 소속된 멤버가 아닙니다."), // 여러 도메인에서 중복 사용되던 것을 하나로 통일
     NOT_MATCH_USER(HttpStatus.FORBIDDEN, "R003", "본인의 데이터에만 접근할 수 있습니다."), // S003 이동 및 범용적으로 수정
+    NOT_A_TRIP_USER(HttpStatus.FORBIDDEN, "R004", "해당 여행에 등록된 사용자가 아닙니다."),
 
     // ==========================================
     // 3. 유저 (User)
@@ -38,6 +39,7 @@ public enum ErrorCode {
     CANNOT_KICK_SELF(HttpStatus.BAD_REQUEST, "T004", "자기 자신을 강퇴할 수 없습니다."),
     TEAM_LEADER_CANNOT_LEAVE(HttpStatus.CONFLICT, "T005", "방장은 팀을 위임하거나 팀을 삭제하기 전까지 탈퇴할 수 없습니다."),
     TEAM_NAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "T006", "이미 동일한 이름으로 생성된 팀이 존재합니다."),
+    NOT_A_TEAM_TRIP(HttpStatus.FORBIDDEN, "T007", "해당 팀에 등록된 여행이 아닙니다."),
 
     // ==========================================
     // 5. 여행 (Trip) - T 접두사 충돌 방지를 위해 TR 사용
@@ -72,7 +74,9 @@ public enum ErrorCode {
     // 9. 일정 (schedule)
     SCHEDULE_ALREADY_EXISTS(HttpStatus.CONFLICT, "SC001", "해당 날짜에는 이미 일정이 생성되어 있습니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SC002", "존재하지 않는 일정입니다."),
-    SCHEDULE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "SC003", "존재하지 않는 일정입니다.");
+    SCHEDULE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "SC003", "존재하지 않는 일정입니다."),
+    INVALID_SCHEDULE_DATE(HttpStatus.BAD_REQUEST, "SC004", "해당 일정 날짜는 여행 기간에 포함되지 않습니다.");
+
     // ==========================================
 
     private final HttpStatus status;
