@@ -1,6 +1,7 @@
 package com.devcrew.togetherpay.domain.schedule.controller;
 
 import com.devcrew.togetherpay.domain.schedule.dto.request.CreateScheduleRequest;
+import com.devcrew.togetherpay.domain.schedule.dto.request.UpdateScheduleItemRequest;
 import com.devcrew.togetherpay.domain.schedule.dto.response.ItemDetailResponse;
 import com.devcrew.togetherpay.domain.schedule.dto.response.ScheduleItemsResponse;
 import com.devcrew.togetherpay.domain.schedule.service.ScheduleService;
@@ -30,7 +31,7 @@ public class ScheduleController {
     }
 
     // 여행 단위로 조회
-    @GetMapping("/trip/{tripId}")
+    @GetMapping("/trips/{tripId}")
     public ResponseEntity<ScheduleItemsResponse> getScheduleItems(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long tripId
@@ -40,27 +41,39 @@ public class ScheduleController {
     }
 
     // 일정 상세 조회
-    @GetMapping("/{itemId}")
+    @GetMapping("/schedule-items/{itemId}")
     public ResponseEntity<ItemDetailResponse> getScheduleItem(
             @AuthenticationPrincipal Long userId,
             @PathVariable(value = "itemId") Long scheduleItemId
     ) {
-        ItemDetailResponse response = scheduleService.getScheduleItem(scheduleItemId);
+        ItemDetailResponse response = scheduleService.findScheduleItem(scheduleItemId);
         return ResponseEntity.ok(response);
     }
 
-    // 일정 수정&등록
-    @PatchMapping("/{itemId}")
+    // 일정 수정 & 등록
+    @PatchMapping("/trips/{tripId}/schedule-items/{itemId}")
     public ResponseEntity<Void> update(
             @AuthenticationPrincipal Long userId,
-            @PathVariable(value = "itemId") Long scheduleItemId
+            @PathVariable Long tripId,
+            @PathVariable(value = "itemId") Long scheduleItemId,
+            @RequestBody UpdateScheduleItemRequest request
     ) {
+        scheduleService.update(userId, tripId, scheduleItemId, request.toCommand());
 
-
+        return ResponseEntity.noContent().build();
 
     }
 
+    // 일정 삭제
+    @DeleteMapping("/trips/{tripId}/schedule-items/{itemId}")
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long tripId,
+            @PathVariable(value = "itemId") Long scheduleItemId
+    ) {
+        scheduleService.delete(userId, tripId, scheduleItemId);
+        return ResponseEntity.noContent().build();
 
-
+    }
 
 }
