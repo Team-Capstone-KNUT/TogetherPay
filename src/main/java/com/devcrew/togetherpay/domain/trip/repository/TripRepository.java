@@ -12,5 +12,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     // 팀 아이디로 여행 목록 조회 및 시작일 순 정렬
     List<Trip> findByTeamIdOrderByStartDateAsc(Long teamID);
 
-    Optional<Trip> findByIdAndTeamId(Long tripId, Long teamId);
+    // trip에 user가 속하는지 검증 메서드
+    boolean existsByIdAndTeam_TeamUsers_User_Id(Long tripId, Long userId);
 }
