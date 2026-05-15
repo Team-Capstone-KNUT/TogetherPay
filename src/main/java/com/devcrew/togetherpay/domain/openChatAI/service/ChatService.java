@@ -75,7 +75,7 @@ public class ChatService {
                 .append("\n");
       }
 
-      sb.append("\n번호를 입력헤주세요. >>> ");
+      sb.append("\n번호를 입력헤주세요.");
 
       return sb.toString();
     }
@@ -88,12 +88,12 @@ public class ChatService {
       try {
         selectedNumber = Integer.parseInt(question.trim()); // 공백 제거.
       } catch (NumberFormatException e) {
-        return "번호로 입력해주세요. >>> ";
+        return "번호로 입력해주세요.";
       }
 
       // 1 보다 작거나 또는 tripIds 갯수를 넘어갈 때.
       if (selectedNumber < 1 || selectedNumber > context.tripIds().size()) {
-        return "선택 가능한 번호가 아닙니다. 다시 입력해주세요. >>> ";
+        return "선택 가능한 번호가 아닙니다. 다시 입력해주세요.";
       }
 
       // index 이기 때문에 -1 해줌. (0 1 2 3 ~)
@@ -145,12 +145,6 @@ public class ChatService {
   // 여행 일정 요약 질문 판단하기.
   // 특정 키워드가 있으면 호출.
   private boolean isTravelScheduleSummary(String question) {
-    boolean hasMyKeyword =
-            question.contains("내")
-            || question.contains("나의")
-            || question.contains("등록한")
-            || question.contains("저장한");
-
     boolean hasScheduleKeyword =
             question.contains("일정")
                     || question.contains("여행 계획")
@@ -162,7 +156,7 @@ public class ChatService {
             || question.contains("확인")
             || question.contains("보여줘");
 
-    return hasMyKeyword && hasScheduleKeyword && hasSummaryKeyword;
+    return hasScheduleKeyword && hasSummaryKeyword;
   }
 
 }
