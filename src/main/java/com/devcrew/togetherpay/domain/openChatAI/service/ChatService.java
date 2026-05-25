@@ -106,12 +106,17 @@ public class ChatService {
 
     // 여행 일정 요약
     private String summarizeSchedule(long tripId) {
-      Schedule schedule = scheduleRepository.findByTripId(tripId)
-              .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+        Schedule schedule = scheduleRepository.findByTripId(tripId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
 
-      StringBuilder sb = new StringBuilder();
+        Trip trip = schedule.getTrip();
 
-      sb.append("사용자가 등록한 여행 일정입니다.\n\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("여행명: ")
+                .append(trip.getTitle())
+                .append("\n\n");
+
+        sb.append("사용자가 등록한 여행 일정입니다.\n\n");
 
       schedule.getScheduleItems()
               .forEach(item -> {
@@ -129,12 +134,40 @@ public class ChatService {
               });
 
       String prompt = """
-              아래 여행 일정만 기반으로 요약해주세요.
-              없는 내용은 지어내지 마세요.
-              날짜순으로 정리하고, 전체 여행 흐름을 보기 쉽게 설명해주세요.
-              
-              %s
-              """.formatted(sb.toString()); // SpringBuilder 넣었던 일정 toString()으로 반환
+            너는 여행 정산 서비스 TogetherPay의 AI '루루'야.
+            사용자가 등록한 여행 일정만 기반으로 여행을 요약해줘.
+            없는 장소, 시간, 비용, 교통편은 절대 지어내지 마.
+    
+            단순히 일정을 반복하지 말고, 사용자가 실제로 도움이 된다고 느낄 정보를 정리해줘.
+    
+            반드시 아래 형식으로 답변해:
+    
+            1. 루루의 한눈에 보는 여행 흐름
+            - 전체 일정이 어떤 흐름인지 2~4문장으로 설명해.
+            - 도시 이동, 쇼핑, 식사, 휴식, 공항 일정 같은 큰 흐름을 짚어줘.
+    
+            2. 날짜별 일정 정리
+            - 날짜별로 제목과 설명을 자연스럽게 요약해.
+            - 각 날짜마다 "이 날의 포인트"를 한 줄로 덧붙여줘.
+    
+            3. 루루 체크
+            - 일정상 사용자가 확인하면 좋을 점을 2~5개 알려줘.
+            - 이동 수단, 숙소, 예약, 공항 도착 시간, 준비물, 예산 분배 같은 관점에서 봐줘.
+            - 단, 등록된 일정에서 추론 가능한 범위 안에서만 말해.
+    
+            4. 빠진 정보
+            - 일정에 시간, 장소 주소, 이동 수단, 예약 정보, 예산 정보가 부족해 보이면 알려줘.
+            - 확실하지 않은 내용은 "~가 등록되어 있지 않다면 추가해두면 좋아요"처럼 표현해.
+    
+            답변 톤:
+            - 친근하지만 너무 장난스럽지 않게.
+            - 한국어로 답변해.
+            - 너무 길지 않게, 모바일 화면에서 읽기 좋게.
+            - 문단 사이를 띄워서 읽기 쉽게.
+    
+            등록된 일정:
+            %s
+        """.formatted(sb.toString()); // SpringBuilder 넣었던 일정 toString()으로 반환
 
       return chatClient.prompt()
               .user(prompt)
