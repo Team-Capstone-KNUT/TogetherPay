@@ -37,7 +37,6 @@ out/
 .vscode/
 
 ### Spring 설정 ###
-src/main/resources/application.yaml
 src/main/resources/application_oauth2.yaml
 
 ### Docker 설정 (개인 환경) ###
