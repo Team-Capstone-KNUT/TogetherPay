@@ -14,4 +14,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     // trip에 user가 속하는지 검증 메서드
     boolean existsByIdAndTeam_TeamUsers_User_Id(Long tripId, Long userId);
+
+    boolean existsByIdAndTeam_IdAndTeam_TeamUsers_User_Id(Long tripId, Long teamId, Long userId);
 }

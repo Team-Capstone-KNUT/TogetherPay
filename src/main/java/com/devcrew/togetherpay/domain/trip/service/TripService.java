@@ -2,6 +2,7 @@ package com.devcrew.togetherpay.domain.trip.service;
 
 import com.devcrew.togetherpay.domain.budget.Budget;
 import com.devcrew.togetherpay.domain.budget.repository.BudgetRepository;
+import com.devcrew.togetherpay.domain.schedule.repository.ScheduleRepository;
 import com.devcrew.togetherpay.domain.team.Team;
 import com.devcrew.togetherpay.domain.team.repository.TeamRepository;
 import com.devcrew.togetherpay.domain.team.repository.TeamUserRepository;
@@ -31,6 +32,7 @@ public class TripService {
     private final TeamUserRepository teamUserRepository;
     private final UserRepository userRepository;
     private final BudgetRepository budgetRepository;
+    private final ScheduleRepository scheduleRepository;
 
     public TripResponse createTrip(Long userId, CreateTripCommand command) {
         // 여행 시작일이 종료일보다 늦다면 예외 발생
@@ -103,6 +105,9 @@ public class TripService {
         if (request.startDate().isAfter(request.endDate())) {
             throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
         }
+
+        scheduleRepository.findByTripId(tripId)
+                .ifPresent(schedule -> schedule.syncDateRange(request.startDate(), request.endDate()));
 
         trip.updateInfo(request.title(), request.startDate(), request.endDate());
 
