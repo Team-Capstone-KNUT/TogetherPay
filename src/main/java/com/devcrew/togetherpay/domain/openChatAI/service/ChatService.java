@@ -1,9 +1,12 @@
 package com.devcrew.togetherpay.domain.openChatAI.service;
 
+import com.devcrew.togetherpay.domain.openChatAI.ChatIntent;
 import com.devcrew.togetherpay.domain.openChatAI.TripSelectionContext;
 import com.devcrew.togetherpay.domain.openChatAI.dto.request.ChatRequest;
-import com.devcrew.togetherpay.domain.schedule.Schedule;
-import com.devcrew.togetherpay.domain.schedule.repository.ScheduleRepository;
+import com.devcrew.togetherpay.domain.openChatAI.dto.request.RecommendationCriteria;
+import com.devcrew.togetherpay.domain.openChatAI.dto.response.ChatBlock;
+import com.devcrew.togetherpay.domain.openChatAI.dto.response.ChatResponse;
+import com.devcrew.togetherpay.domain.openChatAI.dto.response.TripSelectionOption;
 import com.devcrew.togetherpay.domain.trip.Trip;
 import com.devcrew.togetherpay.domain.trip.repository.TripRepository;
 import com.devcrew.togetherpay.global.error.ErrorCode;
@@ -12,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,120 +23,135 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatService {
 
-  private final ChatClient chatClient;
-  private final TripRepository tripRepository;
-  private final ScheduleRepository scheduleRepository;
+    private final ChatClient chatClient;
+    private final TripRepository tripRepository;
+    private final ChatIntentService chatIntentService;
+    private final ChatConversationStateStore conversationStateStore;
+    private final TravelContextService travelContextService;
+    private final RecommendationOrchestrator recommendationOrchestrator;
+    private final RecommendationCriteriaValidator recommendationCriteriaValidator;
+    private final BudgetInsightService budgetInsightService;
+    private final TripHealthScoreService tripHealthScoreService;
 
-  private final Map<Long, TripSelectionContext> pendingSelections = new HashMap<>();
+    public ChatResponse chat(Long userId, Long teamId, ChatRequest request) {
+        String question = request.question();
 
-  public String chat(Long userId, Long teamId, ChatRequest request) {
-    String question = request.question();
+        if (conversationStateStore.findPendingTripSelection(userId, teamId).isPresent()) {
+            return handlerTripSelection(userId, teamId, question);
+        }
 
-    // 사용자가 이전에 여행 선택 대기 상태였는지 확인
-    if (pendingSelections.containsKey(userId)) {
-      return handlerTripSelection(userId, question);
+        ChatIntent intent = chatIntentService.resolve(request);
+
+        if (intent == ChatIntent.SCHEDULE_SUMMARY) {
+            if (request.tripId() != null) {
+                return summarizeSchedule(userId, teamId, request.tripId());
+            }
+            return askTripSelection(userId, teamId);
+        }
+
+        if (intent == ChatIntent.FOOD_RECOMMENDATION) {
+            return handlePlaceRecommendation(userId, teamId, request, ChatIntent.FOOD_RECOMMENDATION);
+        }
+
+        if (intent == ChatIntent.CAFE_RECOMMENDATION) {
+            return handlePlaceRecommendation(userId, teamId, request, ChatIntent.CAFE_RECOMMENDATION);
+        }
+
+        if (intent == ChatIntent.ATTRACTION_RECOMMENDATION) {
+            return handlePlaceRecommendation(userId, teamId, request, ChatIntent.ATTRACTION_RECOMMENDATION);
+        }
+
+        if (intent == ChatIntent.BUDGET_INSIGHT) {
+            return handleBudgetInsight(userId, teamId, request);
+        }
+
+        if (intent == ChatIntent.TRIP_HEALTH_SCORE) {
+            return handleTripHealthScore(userId, teamId, request);
+        }
+
+        if (intent == ChatIntent.TRIP_HEALTH_IMPROVEMENT) {
+            return handleTripHealthImprovement(userId, teamId, request);
+        }
+
+        String answer = chatClient.prompt()
+                .user(request.question())
+                .call()
+                .content();
+
+        return ChatResponse.text(answer);
     }
 
-    // 일정 요약 요청을 한 경우.
-    if (isTravelScheduleSummary(question)) {
-      return askTripSelection(userId, teamId);
-    }
+    private ChatResponse askTripSelection(Long userId, Long teamId) {
+        List<Trip> trips = tripRepository.findByTeamIdOrderByStartDateAsc(teamId);
 
-    // 일반 여행 질문.
-    return chatClient.prompt()
-            .user(request.question())
-            .call()
-            .content();
-    }
+        if (trips.isEmpty()) {
+            return ChatResponse.text("등록된 여행이 없습니다.");
+        }
 
-    private String askTripSelection(Long userId, Long teamId) {
-      List<Trip> trips = tripRepository.findByTeamIdOrderByStartDateAsc(teamId);
+        List<Long> tripIds = trips.stream()
+                .map(Trip::getId)
+                .toList();
 
-      if (trips.isEmpty()) {
-        return "등록된 여행이 없습니다.";
-      }
-
-      List<Long> tripIds = trips.stream()
-              .map(Trip::getId)
-              .toList();
-
-      pendingSelections.put(userId, new TripSelectionContext(teamId, tripIds));
-
-      StringBuilder sb = new StringBuilder();
-      sb.append("요약할 여행을 선택해주세요.\n\n");
-
-      int i = 0;
-      while(i < trips.size()) {
-        Trip trip = trips.get(i);
-
-        sb.append(++i)
-                .append(". ")
-                .append(trip.getTitle())
-                .append(" (id ")
-                .append(trip.getId())
-                .append(")")
-                .append("\n");
-      }
-
-      sb.append("\n번호를 입력헤주세요.");
-
-      return sb.toString();
-    }
-
-  private String handlerTripSelection(Long userId, String question) {
-      TripSelectionContext context = pendingSelections.get(userId);
-
-      int selectedNumber;
-
-      try {
-        selectedNumber = Integer.parseInt(question.trim()); // 공백 제거.
-      } catch (NumberFormatException e) {
-        return "번호로 입력해주세요.";
-      }
-
-      // 1 보다 작거나 또는 tripIds 갯수를 넘어갈 때.
-      if (selectedNumber < 1 || selectedNumber > context.tripIds().size()) {
-        return "선택 가능한 번호가 아닙니다. 다시 입력해주세요.";
-      }
-
-      // index 이기 때문에 -1 해줌. (0 1 2 3 ~)
-      Long selectedTripId = context.tripIds().get(selectedNumber -1);
-
-      pendingSelections.remove(userId);
-
-      return summarizeSchedule(selectedTripId);
-    }
-
-    // 여행 일정 요약
-    private String summarizeSchedule(long tripId) {
-        Schedule schedule = scheduleRepository.findByTripId(tripId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
-
-        Trip trip = schedule.getTrip();
+        conversationStateStore.savePendingTripSelection(userId, new TripSelectionContext(teamId, tripIds));
 
         StringBuilder sb = new StringBuilder();
-        sb.append("여행명: ")
-                .append(trip.getTitle())
-                .append("\n\n");
+        sb.append("요약할 여행을 선택해주세요.\n\n");
 
-        sb.append("사용자가 등록한 여행 일정입니다.\n\n");
+        List<TripSelectionOption> options = new ArrayList<>();
+        int i = 0;
+        while(i < trips.size()) {
+            Trip trip = trips.get(i);
+            int number = i + 1;
 
-      schedule.getScheduleItems()
-              .forEach(item -> {
-                sb.append("[")
-                        .append(item.getDate())
-                        .append("]\n");
+            options.add(new TripSelectionOption(number, trip.getId(), trip.getTitle()));
 
-                sb.append("제목: ")
-                        .append(item.getTitle() == null ? "없음" : item.getTitle())
-                        .append("\n");
+            sb.append(number)
+                    .append(". ")
+                    .append(trip.getTitle())
+                    .append(" (id ")
+                    .append(trip.getId())
+                    .append(")")
+                    .append("\n");
 
-                sb.append("설명: ")
-                        .append(item.getDescription() == null ? "없음" : item.getDescription())
-                        .append("\n\n");
-              });
+            i++;
+        }
 
-      String prompt = """
+        sb.append("\n번호를 입력해주세요.");
+
+        return new ChatResponse(
+                sb.toString(),
+                List.of(new ChatBlock("trip_selection_options", options))
+        );
+    }
+
+    private ChatResponse handlerTripSelection(Long userId, Long teamId, String question) {
+        TripSelectionContext context = conversationStateStore.findPendingTripSelection(userId, teamId)
+                .orElseThrow();
+
+        int selectedNumber;
+
+        try {
+            selectedNumber = Integer.parseInt(question.trim());
+        } catch (NumberFormatException e) {
+            return ChatResponse.text("번호로 입력해주세요.");
+        }
+
+        if (selectedNumber < 1 || selectedNumber > context.tripIds().size()) {
+            return ChatResponse.text("선택 가능한 번호가 아닙니다. 다시 입력해주세요.");
+        }
+
+        Long selectedTripId = context.tripIds().get(selectedNumber - 1);
+
+        conversationStateStore.clearPendingTripSelection(userId, context.teamId());
+
+        return summarizeSchedule(userId, context.teamId(), selectedTripId);
+    }
+
+    private ChatResponse summarizeSchedule(Long userId, Long teamId, long tripId) {
+        validateTripAccess(userId, teamId, tripId);
+
+        String scheduleContext = travelContextService.buildScheduleSummaryContext(tripId);
+        String prompt = """
             너는 여행 정산 서비스 TogetherPay의 AI '루루'야.
             사용자가 등록한 여행 일정만 기반으로 여행을 요약해줘.
             없는 장소, 시간, 비용, 교통편은 절대 지어내지 마.
@@ -167,29 +185,96 @@ public class ChatService {
     
             등록된 일정:
             %s
-        """.formatted(sb.toString()); // SpringBuilder 넣었던 일정 toString()으로 반환
+        """.formatted(scheduleContext);
 
-      return chatClient.prompt()
-              .user(prompt)
-              .call()
-              .content();
-  }
+        String answer = chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+        return ChatResponse.text(answer);
+    }
 
-  // 여행 일정 요약 질문 판단하기.
-  // 특정 키워드가 있으면 호출.
-  private boolean isTravelScheduleSummary(String question) {
-    boolean hasScheduleKeyword =
-            question.contains("일정")
-                    || question.contains("여행 계획")
-                    || question.contains("여행 일정");
+    private void validateTripAccess(Long userId, Long teamId, Long tripId) {
+        boolean hasAccess = tripRepository.existsByIdAndTeam_IdAndTeam_TeamUsers_User_Id(tripId, teamId, userId);
 
-    boolean hasSummaryKeyword =
-            question.contains("요약")
-            || question.contains("정리")
-            || question.contains("확인")
-            || question.contains("보여줘");
+        if (!hasAccess) {
+            throw new BusinessException(ErrorCode.NOT_A_TRIP_USER);
+        }
+    }
 
-    return hasScheduleKeyword && hasSummaryKeyword;
-  }
+    private ChatResponse handleBudgetInsight(Long userId, Long teamId, ChatRequest request) {
+        if (request.tripId() == null) {
+            return new ChatResponse(
+                    "예산 체크를 위해 여행을 선택해주세요.",
+                    List.of(new ChatBlock("missing_budget_insight_trip", Map.of("fields", List.of("tripId"))))
+            );
+        }
+
+        validateTripAccess(userId, teamId, request.tripId());
+
+        return budgetInsightService.analyze(request.tripId(), request.question());
+    }
+
+    private ChatResponse handleTripHealthScore(Long userId, Long teamId, ChatRequest request) {
+        if (request.tripId() == null) {
+            return new ChatResponse(
+                    "여행 건강도를 계산하려면 여행을 선택해주세요.",
+                    List.of(new ChatBlock("missing_trip_health_score_trip", Map.of("fields", List.of("tripId"))))
+            );
+        }
+
+        validateTripAccess(userId, teamId, request.tripId());
+
+        return tripHealthScoreService.analyze(request.tripId(), request.question());
+    }
+
+    private ChatResponse handleTripHealthImprovement(Long userId, Long teamId, ChatRequest request) {
+        if (request.tripId() == null) {
+            return new ChatResponse(
+                    "여행 건강도 개선안을 만들려면 여행을 선택해주세요.",
+                    List.of(new ChatBlock("missing_trip_health_improvement_trip", Map.of("fields", List.of("tripId"))))
+            );
+        }
+
+        if (request.targetScore() == null) {
+            return new ChatResponse(
+                    "목표 점수를 선택해주세요.",
+                    List.of(new ChatBlock("missing_trip_health_improvement_target", Map.of("fields", List.of("targetScore"))))
+            );
+        }
+
+        validateTripAccess(userId, teamId, request.tripId());
+
+        return tripHealthScoreService.improve(request.tripId(), request.question(), request.targetScore());
+    }
+
+    private ChatResponse handlePlaceRecommendation(Long userId, Long teamId, ChatRequest request, ChatIntent intent) {
+        RecommendationCriteria criteria = request.criteria();
+        RecommendationCriteriaValidator.MissingCriteriaResult missingCriteria =
+                recommendationCriteriaValidator.validate(intent, criteria);
+
+        if (missingCriteria.hasMissingFields()) {
+            return new ChatResponse(
+                    missingCriteria.message(),
+                    List.of(new ChatBlock("missing_recommendation_criteria", Map.of("fields", missingCriteria.missingFields())))
+            );
+        }
+
+        String scheduleContext = null;
+        if (request.tripId() != null) {
+            validateTripAccess(userId, teamId, request.tripId());
+            scheduleContext = travelContextService.buildScheduleSummaryContext(request.tripId());
+        }
+
+        if (intent == ChatIntent.CAFE_RECOMMENDATION) {
+            return recommendationOrchestrator.recommendCafe(request, scheduleContext);
+        }
+
+        if (intent == ChatIntent.ATTRACTION_RECOMMENDATION) {
+            return recommendationOrchestrator.recommendAttraction(request, scheduleContext);
+        }
+
+        return recommendationOrchestrator.recommendFood(request, scheduleContext);
+    }
 
 }

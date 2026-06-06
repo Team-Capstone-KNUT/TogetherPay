@@ -1,0 +1,13 @@
+package com.devcrew.togetherpay.domain.openChatAI;
+
+public enum ChatIntent {
+    SCHEDULE_SUMMARY,
+    FOOD_RECOMMENDATION,
+    CAFE_RECOMMENDATION,
+    ATTRACTION_RECOMMENDATION,
+    BUDGET_INSIGHT,
+    TRIP_HEALTH_SCORE,
+    TRIP_HEALTH_IMPROVEMENT,
+    ITINERARY_INSIGHT,
+    GENERAL_CHAT
+}
