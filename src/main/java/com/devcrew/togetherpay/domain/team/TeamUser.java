@@ -12,7 +12,13 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "team_users")
+@Table(
+        name = "team_users",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_team_users_team_id_user_id",
+                columnNames = {"team_id", "user_id"}
+        )
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TeamUser extends BaseTimeEntity {
 

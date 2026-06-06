@@ -114,6 +114,15 @@ public class TeamController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{teamId}/users")
+    public ResponseEntity<Void> addMembers(
+            @AuthenticationPrincipal Long leaderId,
+            @PathVariable Long teamId,
+            @Valid @RequestBody AddTeamMembersRequest request) {
+        teamService.addMembers(leaderId, teamId, request.memberIds());
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * 멤버 강퇴(리더 권한자만) API
      * @param leaderId

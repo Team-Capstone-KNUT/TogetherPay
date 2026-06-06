@@ -15,6 +15,16 @@ public interface TeamUserRepository extends JpaRepository<TeamUser, Long> {
     // 팀 가입 시의 중복 검사용 메서드
     boolean existsByTeamAndUser(Team team, User user);
 
+    @Query("""
+            SELECT CASE WHEN COUNT(tu) > 0 THEN true ELSE false END
+            FROM TeamUser tu
+            WHERE tu.team.id = :teamId AND tu.user.id IN :userIds
+            """)
+    boolean existsAnyByTeamIdAndUserIds(
+            @Param("teamId") Long teamId,
+            @Param("userIds") List<Long> userIds
+    );
+
     // 예산/지출 등 도메인 로직 시 특정 팀원의 정보, 권한 조회 메서드
     Optional<TeamUser> findByTeamAndUser(Team team, User user);
 

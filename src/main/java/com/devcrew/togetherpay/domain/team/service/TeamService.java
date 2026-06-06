@@ -17,6 +17,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -198,6 +199,38 @@ public class TeamService {
     }
 
     /**
+     * 기존 팀에 멤버 일괄 추가(리더만)
+     */
+    @Transactional
+    public void addMembers(Long leaderId, Long teamId, List<Long> memberIds) {
+        Team team = getTeamOrThrow(teamId);
+        User leader = getUserOrThrow(leaderId);
+        getTeamUserOrThrow(team, leader).validateLeader();
+
+        List<Long> distinctMemberIds = memberIds.stream().distinct().toList();
+        List<User> members = userRepository.findAllById(distinctMemberIds);
+
+        if (members.size() != distinctMemberIds.size()) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        if (teamUserRepository.existsAnyByTeamIdAndUserIds(teamId, distinctMemberIds)) {
+            throw new BusinessException(ErrorCode.ALREADY_TEAM_MEMBER);
+        }
+
+        List<TeamUser> teamUsers = members.stream()
+                .map(member -> TeamUser.createMember(team, member))
+                .toList();
+        try {
+            teamUserRepository.saveAllAndFlush(teamUsers);
+        } catch (DataIntegrityViolationException exception) {
+            throw new BusinessException(ErrorCode.ALREADY_TEAM_MEMBER);
+        }
+
+        log.info("팀 멤버 추가 완료. teamId: {}, leaderId: {}, memberCount: {}",
+                teamId, leaderId, teamUsers.size());
+    }
+
+    /**
      * 멤버 강퇴
      * @param leaderId
      * @param teamId
@@ -266,6 +299,6 @@ public class TeamService {
     // 팀 유저 검증 메서드(유저가 팀에 속해 있는지 여부 확인)
     private TeamUser getTeamUserOrThrow(Team team, User user) {
         return teamUserRepository.findByTeamAndUser(team, user)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_A_TEAM_LEADER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_A_TEAM_USER));
     }
 }
