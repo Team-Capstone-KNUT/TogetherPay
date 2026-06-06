@@ -3,6 +3,7 @@ package com.devcrew.togetherpay.domain.expense.dto;
 import com.devcrew.togetherpay.domain.expense.Category;
 import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.domain.expense.Expense;
+import com.devcrew.togetherpay.domain.expense.PaymentMethod;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +25,7 @@ public record FindExpensesResponse(
                   .krwTotalAmount(expense.getKrwTotalAmount())
                   .category(expense.getCategory())
                   .expenseDate(expense.getExpenseDate())
+                  .paymentMethod(expense.getPaymentMethod())
                   .isDutchPay(expense.isDutchPay())
                   .payerId(expense.payerId())
                   .build();
@@ -43,6 +45,7 @@ public record FindExpensesResponse(
       Integer krwTotalAmount,
       Category category,
       LocalDate expenseDate,
+      PaymentMethod paymentMethod,
       boolean isDutchPay,
       Long payerId
   ) {}

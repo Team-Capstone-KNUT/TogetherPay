@@ -36,7 +36,7 @@ public record RegisterIndividualExpenseCommand(
         .expenseDate(expenseDate)
         .paymentMethod(method)
         .totalAmount(Money.of(totalAmount))
-        .exchangeRate(Money.of(exchangeRate))
+        .exchangeRate(exchangeRate == null ? null : Money.of(exchangeRate))
         .trip(trip)
         .isDutchPay(false)
         .build();

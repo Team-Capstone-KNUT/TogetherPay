@@ -1,16 +1,14 @@
 package com.devcrew.togetherpay.domain.expense.repository;
 
-import com.devcrew.togetherpay.domain.budget.Budget;
 import com.devcrew.togetherpay.domain.expense.Expense;
-import com.devcrew.togetherpay.domain.trip.Trip;
+import com.devcrew.togetherpay.domain.expense.dto.ExpenseCategoryTotal;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
@@ -22,4 +20,14 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             "join fetch p.user " +
             "where e.trip.id = :tripId")
     List<Expense> findAllByTripIdWithParticipants(@Param("tripId") Long tripId);
+
+    @Query("select coalesce(sum(e.totalAmount.amount), 0) from Expense e where e.trip.id = :tripId")
+    BigDecimal sumTotalAmountByTripId(@Param("tripId") Long tripId);
+
+    @Query("select new com.devcrew.togetherpay.domain.expense.dto.ExpenseCategoryTotal(e.category, coalesce(sum(e.totalAmount.amount), 0)) " +
+            "from Expense e " +
+            "where e.trip.id = :tripId " +
+            "group by e.category " +
+            "order by coalesce(sum(e.totalAmount.amount), 0) desc")
+    List<ExpenseCategoryTotal> sumTotalAmountByTripIdGroupByCategory(@Param("tripId") Long tripId);
 }

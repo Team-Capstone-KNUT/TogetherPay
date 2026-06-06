@@ -176,7 +176,7 @@ public class Expense extends BaseTimeEntity {
     this.expenseDate = expenseDate;
     this.paymentMethod = paymentMethod;
     this.totalAmount = Money.of(totalAmount);
-    this.exchangeRate = Money.of(exchangeRate);
+    this.exchangeRate = exchangeRate == null ? null : Money.of(exchangeRate);
     calculateKRW();
   }
 

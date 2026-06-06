@@ -2,6 +2,7 @@ package com.devcrew.togetherpay.domain.expense.service;
 
 import com.devcrew.togetherpay.domain.budget.Budget;
 import com.devcrew.togetherpay.domain.budget.repository.BudgetRepository;
+import com.devcrew.togetherpay.domain.expense.Currency;
 import com.devcrew.togetherpay.domain.expense.Expense;
 import com.devcrew.togetherpay.domain.expense.Participant;
 import com.devcrew.togetherpay.domain.expense.controller.command.RegisterDutchExpenseCommand;
@@ -22,6 +23,7 @@ import com.devcrew.togetherpay.global.common.vo.Money;
 import com.devcrew.togetherpay.global.error.ErrorCode;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +82,7 @@ public class ExpenseService {
     expenseRepository.save(expense);
 
     // 예산 차감
-    spendBudget(trip, command.totalAmount());
+    spendBudget(trip, command.totalAmount(), command.currency(), command.expenseDate(), exchangeRate);
   }
 
   /**
@@ -111,7 +113,7 @@ public class ExpenseService {
     expenseRepository.save(expense);
 
     // 예산 차감
-    spendBudget(trip, totalAmount);
+    spendBudget(trip, totalAmount, command.currency(), command.expenseDate(), exchangeRate);
   }
 
   /**
@@ -157,21 +159,18 @@ public class ExpenseService {
     trip.validateDate(command.expenseDate());
 
     // 기존 금액을 예산에 환불(복구)
-    refundBudget(trip, expense.getTotalAmount());
+    refundBudget(expense);
 
     expense.clearParticipants();
 
-    BigDecimal newTotalAmount;
     if (command.isDutchPay() != null && command.isDutchPay() && command.totalAmount() != null) {
       updateDutchPay(expense, command);
-      newTotalAmount = command.totalAmount();
     } else {
       updateIndividualAmount(expense, command);
-      newTotalAmount = calculateIndividualAmount(command.participantInfos());
     }
 
     // 새로운 날짜/금액으로 예산 다시 차감
-    spendBudget(trip, newTotalAmount);
+    spendBudget(expense);
   }
 
   /**
@@ -186,21 +185,82 @@ public class ExpenseService {
     validateUserIsTeamMember(userId, team);
 
     // 지출 삭제 시, 기존 지출 금액을 예산에 환불(복구)
-    refundBudget(expense.getTrip(), expense.getTotalAmount());
+    refundBudget(expense);
 
     expenseRepository.delete(expense);
   }
 
-  private void spendBudget(Trip trip, BigDecimal amount) {
-    Budget budget = budgetRepository.findByTripId(trip.getId())
-            .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_NOT_FOUND));
-    budget.spend(Money.of(amount));
+  private void spendBudget(Expense expense) {
+    spendBudget(
+            expense.getTrip(),
+            expense.getTotalAmount(),
+            expense.getCurrency(),
+            expense.getExpenseDate(),
+            expense.getExchangeRate()
+    );
   }
 
-  private void refundBudget(Trip trip, BigDecimal amount) {
+  private void spendBudget(
+          Trip trip,
+          BigDecimal amount,
+          Currency expenseCurrency,
+          LocalDate expenseDate,
+          BigDecimal expenseExchangeRate
+  ) {
     Budget budget = budgetRepository.findByTripId(trip.getId())
             .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_NOT_FOUND));
+    budget.spend(Money.of(convertToTripCurrency(trip, amount, expenseCurrency, expenseDate, expenseExchangeRate)));
+  }
+
+  private void refundBudget(Expense expense) {
+    Budget budget = budgetRepository.findByTripId(expense.getTrip().getId())
+            .orElseThrow(() -> new BusinessException(ErrorCode.BUDGET_NOT_FOUND));
+    BigDecimal amount = convertToTripCurrency(
+            expense.getTrip(),
+            expense.getTotalAmount(),
+            expense.getCurrency(),
+            expense.getExpenseDate(),
+            expense.getExchangeRate()
+    );
     budget.refund(Money.of(amount));
+  }
+
+  private BigDecimal convertToTripCurrency(
+          Trip trip,
+          BigDecimal amount,
+          Currency expenseCurrency,
+          LocalDate expenseDate,
+          BigDecimal expenseExchangeRate
+  ) {
+    Currency baseCurrency = trip.getBaseCurrency();
+    if (expenseCurrency == baseCurrency) {
+      return amount;
+    }
+
+    BigDecimal amountInKrw = convertToKrw(amount, expenseCurrency, expenseDate, expenseExchangeRate);
+    if (baseCurrency == Currency.KRW) {
+      return amountInKrw;
+    }
+
+    BigDecimal baseExchangeRate = exchangeRateService.getExchangeRate(baseCurrency, expenseDate);
+    return amountInKrw.divide(baseExchangeRate, 2, RoundingMode.HALF_UP);
+  }
+
+  private BigDecimal convertToKrw(
+          BigDecimal amount,
+          Currency expenseCurrency,
+          LocalDate expenseDate,
+          BigDecimal expenseExchangeRate
+  ) {
+    if (expenseCurrency == Currency.KRW) {
+      return amount;
+    }
+
+    BigDecimal exchangeRate = expenseExchangeRate == null
+            ? exchangeRateService.getExchangeRate(expenseCurrency, expenseDate)
+            : expenseExchangeRate;
+
+    return amount.multiply(exchangeRate).setScale(2, RoundingMode.HALF_UP);
   }
 
   private Trip getTripOrThrow(Long tripId) {
