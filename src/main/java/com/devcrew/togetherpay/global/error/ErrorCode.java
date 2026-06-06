@@ -15,6 +15,7 @@ public enum ErrorCode {
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C002", "잘못된 입력입니다."),
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C003", "입력 타입이 유효하지 않습니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C004", "허용되지 않은 HTTP 메서드입니다."),
+    EXTERNAL_API_FAILED(HttpStatus.BAD_GATEWAY, "C005", "외부 API 호출에 실패했습니다."),
 
     // ==========================================
     // 2. 권한/인증 (Auth/Role) - 재사용성 높은 에러들 모음
@@ -75,7 +76,8 @@ public enum ErrorCode {
     SCHEDULE_ALREADY_EXISTS(HttpStatus.CONFLICT, "SC001", "해당 날짜에는 이미 일정이 생성되어 있습니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SC002", "존재하지 않는 일정입니다."),
     SCHEDULE_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "SC003", "존재하지 않는 일정입니다."),
-    INVALID_SCHEDULE_DATE(HttpStatus.BAD_REQUEST, "SC004", "해당 일정 날짜는 여행 기간에 포함되지 않습니다.");
+    INVALID_SCHEDULE_DATE(HttpStatus.BAD_REQUEST, "SC004", "해당 일정 날짜는 여행 기간에 포함되지 않습니다."),
+    SCHEDULE_DATE_RANGE_CONFLICT(HttpStatus.CONFLICT, "SC005", "변경할 여행 기간 밖에 등록된 일정이 있습니다.");
 
     // ==========================================
 
