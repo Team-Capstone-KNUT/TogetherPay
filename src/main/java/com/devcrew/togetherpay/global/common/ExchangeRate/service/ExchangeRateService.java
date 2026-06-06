@@ -71,6 +71,10 @@ public class ExchangeRateService {
    * 매매기준율로 반환.
    */
   public BigDecimal getExchangeRate(Currency currency, LocalDate expenseDate) {
+    if (currency == Currency.KRW) {
+      return null;
+    }
+
     FindExchangeRateResponse response = searchExchange(currency, expenseDate);
 
     if (response == null || response.dealBasR() == null) {
