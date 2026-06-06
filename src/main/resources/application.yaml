@@ -71,3 +71,7 @@ logging:
 
 openApi:
   auth-key: ${AUTH_KEY}
+
+google:
+  places:
+    api-key: ${GOOGLE_PLACES_API_KEY}
