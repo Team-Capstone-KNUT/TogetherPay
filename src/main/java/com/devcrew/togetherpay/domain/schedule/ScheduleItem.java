@@ -23,10 +23,10 @@ public class ScheduleItem {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 200)
     private String title;
 
-    @Column(nullable = true)
+    @Column(nullable = true, columnDefinition = "TEXT")
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,5 +41,10 @@ public class ScheduleItem {
     public void delete() {
         this.title = null;
         this.description = null;
+    }
+
+    public boolean hasContent() {
+        return title != null && !title.isBlank()
+                || description != null && !description.isBlank();
     }
 }

@@ -29,6 +29,10 @@ public record ScheduleItemsResponse(
                 .build();
     }
 
+    public static ScheduleItemsResponse empty() {
+        return new ScheduleItemsResponse(List.of());
+    }
+
     @Builder
     public record ScheduleItemResponse(
             Long scheduleItemId,

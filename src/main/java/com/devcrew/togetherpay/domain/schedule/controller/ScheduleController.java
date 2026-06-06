@@ -5,6 +5,7 @@ import com.devcrew.togetherpay.domain.schedule.dto.request.UpdateScheduleItemReq
 import com.devcrew.togetherpay.domain.schedule.dto.response.ItemDetailResponse;
 import com.devcrew.togetherpay.domain.schedule.dto.response.ScheduleItemsResponse;
 import com.devcrew.togetherpay.domain.schedule.service.ScheduleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,7 +57,7 @@ public class ScheduleController {
             @AuthenticationPrincipal Long userId,
             @PathVariable Long tripId,
             @PathVariable(value = "itemId") Long scheduleItemId,
-            @RequestBody UpdateScheduleItemRequest request
+            @Valid @RequestBody UpdateScheduleItemRequest request
     ) {
         scheduleService.update(userId, tripId, scheduleItemId, request.toCommand());
 

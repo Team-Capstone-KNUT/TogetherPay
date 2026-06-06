@@ -68,10 +68,11 @@ public class ScheduleService {
      */
     @Transactional(readOnly = true)
     public ScheduleItemsResponse getScheduleItems(Long userId, Long tripId) {
-        Schedule schedule = scheduleRepository.findByIdAndTripId(userId, tripId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+        validateTripUser(userId, tripId);
 
-        return ScheduleItemsResponse.from(schedule.getScheduleItems());
+        return scheduleRepository.findByTripId(tripId)
+                .map(schedule -> ScheduleItemsResponse.from(schedule.getScheduleItems()))
+                .orElseGet(ScheduleItemsResponse::empty);
     }
 
     /**
