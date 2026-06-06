@@ -3,6 +3,7 @@ package com.devcrew.togetherpay.global.error;
 import com.devcrew.togetherpay.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,6 +32,12 @@ public class GlobalExceptionHandler {
         log.error("Validation Fail: {}", message);
 
         return ErrorResponse.toResponseEntity(ErrorCode.INVALID_INPUT_VALUE, message);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    protected ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        log.error("Request body parse fail: {}", e.getMessage());
+        return ErrorResponse.toResponseEntity(ErrorCode.INVALID_INPUT_VALUE, "요청 본문 형식이 올바르지 않습니다.");
     }
 
     @ExceptionHandler
